@@ -16,6 +16,8 @@
         /* --- COSMIC THEME VARIABLES --- */
         :root { 
             --primary-color: #00d2ff; 
+            --secondary-color: #3a7bd5;
+            --accent-color: #ff00cc;
             --glass-bg: rgba(20, 20, 35, 0.95); 
             --text-color: #ffffff; 
             --glass-border: rgba(255, 255, 255, 0.1); 
@@ -126,17 +128,18 @@
 
         /* --- MODAL --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-box { background: #151520; width: 90%; max-width: 600px; padding: 2rem; border-radius: 15px; border: 1px solid var(--glass-border); position: relative; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .modal-box { background: #151520; width: 90%; max-width: 800px; padding: 2rem; border-radius: 15px; border: 1px solid var(--glass-border); position: relative; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
         .modal-close { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.5rem; color: #aaa; transition: 0.2s; }
         .modal-close:hover { color: #ff4444; transform: rotate(90deg); }
 
         .team-table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 0.9rem; }
-        .team-table th { background: rgba(255,255,255,0.05); color: #ccc; padding: 8px; text-align: left; }
-        .team-table td { border-bottom: 1px solid #333; padding: 8px; color: #aaa; }
+        .team-table th { background: rgba(255,255,255,0.05); color: var(--secondary-color); padding: 10px; text-align: left; }
+        .team-table td { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px; color: #ddd; }
         
+        .detail-section-title { color: var(--primary-color); margin: 20px 0 10px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; font-size: 1.1rem; }
         .detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 0; }
         .detail-label { color: #888; }
-        .detail-val { color: white; font-weight: 500; }
+        .detail-val { color: white; font-weight: 500; text-align: right; }
 
         /* --- RESPONSIVE --- */
         @media (max-width: 1024px) {
@@ -213,7 +216,7 @@
                     <thead>
                         <tr>
                             <th>Student / Team</th>
-                            <th>Status</th>
+                            <th>Roll No</th>
                             <th>Attendance</th>
                             <th>Action</th>
                         </tr>
@@ -230,7 +233,7 @@
     <div class="modal-overlay" id="detailModal">
         <div class="modal-box">
             <span class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></span>
-            <h3 style="color:var(--primary-color); margin-bottom:20px;" id="modalTitle">Details</h3>
+            <h3 style="color:var(--primary-color); margin-bottom:10px; font-family:'Montserrat';" id="modalTitle">Details</h3>
             <div id="modalContent"></div>
         </div>
     </div>
@@ -240,6 +243,7 @@
         let currentEventId = null;
         let currentEventName = "";
         let currentStudentsData = [];
+        let userDetailsMap = {}; // Stores details for Leads AND Members
 
         // --- SIDEBAR TOGGLE ---
         function toggleSidebar() {
@@ -274,7 +278,6 @@
 
         // --- SELECT EVENT ---
         async function selectEvent(eventId, title, element) {
-            // Highlight selected
             document.querySelectorAll('.event-item').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
             
@@ -282,7 +285,6 @@
             currentEventName = title;
             document.getElementById('selectedEventTitle').innerText = title;
             
-            // Mobile scroll logic
             if(window.innerWidth <= 1024) {
                 document.querySelector('.panel-right').scrollIntoView({behavior: 'smooth'});
             }
@@ -299,6 +301,7 @@
             exportBtns.style.display = 'none';
 
             try {
+                // 1. Fetch Registrations for Event
                 const res = await fetch(`/api/coordinator/event-students?eventId=${eventId}`);
                 currentStudentsData = await res.json();
 
@@ -308,8 +311,12 @@
                     return;
                 }
 
+                // 2. Bulk Fetch Details (Lead + Members)
+                await bulkFetchUserDetails(currentStudentsData);
+
                 exportBtns.style.display = 'flex';
 
+                // 3. Render
                 currentStudentsData.forEach(student => {
                     const isPresent = student.attendance === true;
                     const statusHtml = isPresent ? '<span class="status-present">Present</span>' : '<span class="status-absent">Absent</span>';
@@ -318,18 +325,23 @@
                         ? `<button class="btn-toggle btn-marked"><i class="fa-solid fa-check"></i> Marked</button>`
                         : `<button class="btn-toggle btn-mark" onclick="markAttendance('${student.registrationId}')">Mark Present</button>`;
 
-                    let displayName = student.studentEmail;
-                    let icon = '<i class="fa-solid fa-user"></i>';
-                    
-                    if(student.teamName) {
-                        displayName = `<span style="color:#ff00cc; font-weight:bold;">${student.teamName}</span>`;
-                        icon = '<i class="fa-solid fa-users"></i>';
-                    }
+                    const user = userDetailsMap[student.studentEmail] || {};
+
+                    // Name Logic: Team Name OR Participant Name
+                    let displayName = student.teamName ? student.teamName : (user.fullName || student.studentEmail);
+                    let subText = student.teamName ? "Team Lead: " + (user.fullName || "N/A") : "Individual";
+                    let icon = student.teamName ? '<i class="fa-solid fa-users"></i>' : '<i class="fa-solid fa-user"></i>';
+                    let displayColor = student.teamName ? 'var(--accent-color)' : 'white';
 
                     tbody.innerHTML += `
                         <tr>
-                            <td><span class="click-link" onclick="viewDetails('${student.registrationId}')">${icon} ${displayName}</span></td>
-                            <td style="color:#4caf50; font-weight:bold;">PAID</td>
+                            <td>
+                                <span class="click-link" onclick="viewDetails('${student.registrationId}')" style="color:${displayColor}">
+                                    ${icon} &nbsp; ${displayName}
+                                </span><br>
+                                <small style="color:#888; margin-left:25px;">${subText}</small>
+                            </td>
+                            <td>${user.rollNo || '-'}</td>
                             <td>${statusHtml}</td>
                             <td>${btnHtml}</td>
                         </tr>
@@ -338,6 +350,38 @@
             } catch (e) {
                 console.error(e);
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Error loading data.</td></tr>';
+            }
+        }
+
+        // --- BULK FETCH USER DETAILS (Includes Members) ---
+        async function bulkFetchUserDetails(registrations) {
+            let emails = [];
+            
+            registrations.forEach(r => {
+                // 1. Leader
+                if (r.studentEmail) emails.push(r.studentEmail);
+                // 2. Members
+                if (r.teamMembers && Array.isArray(r.teamMembers)) {
+                    r.teamMembers.forEach(m => {
+                        if (m.email) emails.push(m.email);
+                    });
+                }
+            });
+
+            // Unique emails
+            emails = [...new Set(emails)];
+            if (emails.length === 0) return;
+
+            try {
+                const res = await fetch('/api/coordinator/export-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emails: emails })
+                });
+                if (!res.ok) throw new Error("Failed to fetch");
+                userDetailsMap = await res.json();
+            } catch (err) {
+                console.error("Failed to fetch user details", err);
             }
         }
 
@@ -351,7 +395,7 @@
                 });
                 
                 if (res.ok) {
-                    loadStudents(currentEventId); // Refresh list
+                    loadStudents(currentEventId); // Refresh list to update status
                 } else {
                     alert("Failed to mark attendance");
                 }
@@ -360,126 +404,164 @@
             }
         }
 
-        // --- VIEW DETAILS (WITH YEAR) ---
+        // --- VIEW DETAILS (FULL INFO) ---
         async function viewDetails(regId) {
             const reg = currentStudentsData.find(r => r.registrationId === regId);
             if(!reg) return;
 
+            const user = userDetailsMap[reg.studentEmail] || {};
             const modal = document.getElementById('detailModal');
             const content = document.getElementById('modalContent');
             const title = document.getElementById('modalTitle');
             
             modal.style.display = 'flex';
-            content.innerHTML = '<p style="text-align:center;">Loading details...</p>';
+            
+            // Determine Titles
+            let mainTitle = reg.teamName ? `Team: ${reg.teamName}` : `Participant: ${user.fullName}`;
+            title.innerText = mainTitle;
 
-            try {
-                // Fetch Profile Data (Name, Year, Mobile) from Users Table
-                const res = await fetch(`/api/coordinator/student-details?email=${reg.studentEmail}`);
-                const user = await res.json();
+            // Details Construction
+            let html = `
+                <div style="display:flex; justify-content:space-between; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; margin-bottom:15px;">
+                    <span>Event: <strong style="color:var(--primary-color)">${currentEventName}</strong></span>
+                    <span>Status: <strong>${reg.attendance ? '<span style="color:#4caf50">Present</span>' : '<span style="color:#ff4444">Absent</span>'}</strong></span>
+                </div>
 
-                if(reg.teamName) {
-                    // --- TEAM VIEW ---
-                    title.innerText = `Team: ${reg.teamName}`;
-                    let html = `<p style="color:#aaa; margin-bottom:10px;">Leader: <strong style="color:white;">${user.fullName}</strong> (Year: ${user.year || 'N/A'})</p>`;
+                <h4 class="detail-section-title">1. Team Lead Details</h4>
+                <div class="detail-row"><span class="detail-label">Full Name</span><span class="detail-val">${user.fullName || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">Email</span><span class="detail-val">${reg.studentEmail}</span></div>
+                <div class="detail-row"><span class="detail-label">Mobile</span><span class="detail-val">${user.mobile || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">Roll Number</span><span class="detail-val">${user.rollNo || 'N/A'}</span></div>
+
+                <h4 class="detail-section-title">2. Team Members</h4>
+                <div class="table-scroll" style="max-height: 200px;">
+                <table class="team-table">
+                    <thead>
+                        <tr><th>Name</th><th>Mobile</th><th>Email</th><th>Roll No</th></tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            if(reg.teamMembers && reg.teamMembers.length > 0) {
+                reg.teamMembers.forEach(m => {
+                    // Lookup member roll/details from map
+                    const memberDetails = userDetailsMap[m.email] || {};
+                    const memberRoll = memberDetails.rollNo || m.rollNo || m.regNo || '-';
                     
-                    html += `<table class="team-table"><thead><tr><th>Name</th><th>Roll</th><th>Year</th><th>Mobile</th></tr></thead><tbody>`;
-                    
-                    // Members (from registration data)
-                    if(reg.teamMembers && reg.teamMembers.length > 0) {
-                        reg.teamMembers.forEach(m => {
-                            html += `
-                                <tr>
-                                    <td>${m.name}</td>
-                                    <td>${m.roll}</td>
-                                    <td>${m.year || 'N/A'}</td>
-                                    <td>${m.mobile}</td>
-                                </tr>
-                            `;
-                        });
-                    }
-                    html += `</tbody></table>`;
-                    content.innerHTML = html;
-
-                } else {
-                    // --- INDIVIDUAL VIEW ---
-                    title.innerText = "Student Profile";
-                    content.innerHTML = `
-                        <div class="detail-row"><span class="detail-label">Name</span><span class="detail-val">${user.fullName || 'N/A'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Roll No</span><span class="detail-val">${user.rollNo || 'N/A'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Year</span><span class="detail-val">${user.year || 'N/A'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Mobile</span><span class="detail-val">${user.mobile || 'N/A'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Email</span><span class="detail-val">${reg.studentEmail}</span></div>
+                    html += `
+                        <tr>
+                            <td>${m.name || '-'}</td>
+                            <td>${m.mobile || '-'}</td>
+                            <td>${m.email || '-'}</td>
+                            <td>${memberRoll}</td>
+                        </tr>
                     `;
-                }
-            } catch (e) {
-                console.error(e);
-                content.innerHTML = '<p style="color:red; text-align:center;">Failed to load details.</p>';
+                });
+            } else {
+                html += `<tr><td colspan="4" style="text-align:center; color:#666;">No additional members.</td></tr>`;
             }
+
+            html += `
+                    </tbody>
+                </table>
+                </div>
+
+                <h4 class="detail-section-title">3. Institution Details</h4>
+                <div class="detail-row"><span class="detail-label">Department</span><span class="detail-val">${user.dept || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">College</span><span class="detail-val">${user.college || 'N/A'}</span></div>
+            `;
+            
+            content.innerHTML = html;
         }
 
         function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
 
-        // --- EXPORT LOGIC (WITH YEAR) ---
-        async function fetchUserDataForExport() {
-            const emails = currentStudentsData.map(r => r.studentEmail);
-            const unique = [...new Set(emails)];
-            
-            const res = await fetch('/api/coordinator/export-data', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ emails: unique })
-            });
-            return await res.json();
-        }
-
+        // --- EXPORT EXCEL (FULL DETAILS) ---
         async function exportExcel() {
-            if(currentStudentsData.length === 0) return alert("No data");
-            
-            const userMap = await fetchUserDataForExport();
+            if(currentStudentsData.length === 0) return alert("No data to export.");
             
             const data = currentStudentsData.map(reg => {
-                const user = userMap[reg.studentEmail] || {};
+                const user = userDetailsMap[reg.studentEmail] || {};
+                const finalTeamName = reg.teamName ? reg.teamName : (user.fullName || "Individual");
+
+                // Format Members
+                let membersStr = "";
+                if (reg.teamMembers && reg.teamMembers.length > 0) {
+                    membersStr = reg.teamMembers.map(m => {
+                        const memberDetails = userDetailsMap[m.email] || {};
+                        const memberRoll = memberDetails.rollNo || m.rollNo || '-';
+                        return `Name: ${m.name}, Mob: ${m.mobile || '-'}, Email: ${m.email || '-'}, Roll: ${memberRoll}`;
+                    }).join("\n");
+                } else {
+                    membersStr = "None";
+                }
+
                 return {
-                    "Team Name": reg.teamName || "N/A",
-                    "Leader Name": user.fullName || "N/A",
-                    "Leader Year": user.year || "N/A",
-                    "Email": reg.studentEmail,
+                    "Team / Participant Name": finalTeamName,
+                    "Event Name": currentEventName,
+                    "Lead Name": user.fullName || "N/A",
+                    "Lead Email": reg.studentEmail,
+                    "Lead Mobile": user.mobile || "N/A",
+                    "Lead Roll No": user.rollNo || "N/A",
+                    "Team Members Details": membersStr,
+                    "Department": user.dept || "N/A",
+                    "College": user.college || "N/A",
                     "Attendance": reg.attendance ? "Present" : "Absent"
                 };
             });
 
             const ws = XLSX.utils.json_to_sheet(data);
+            if(!ws['!cols']) ws['!cols'] = [];
+            ws['!cols'][6] = { wch: 60 }; // Member column width
+
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Attendance");
             XLSX.writeFile(wb, `${currentEventName}_Attendance.xlsx`);
         }
 
+        // --- EXPORT PDF (FULL DETAILS) ---
         async function exportPDF() {
-            if(currentStudentsData.length === 0) return alert("No data");
+            if(currentStudentsData.length === 0) return alert("No data to export.");
             
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const userMap = await fetchUserDataForExport();
+            const doc = new jsPDF('l', 'mm', 'a3'); // A3 Landscape
 
             doc.setFontSize(16);
             doc.text(`Attendance List: ${currentEventName}`, 14, 20);
             doc.setFontSize(10);
 
             const tableData = currentStudentsData.map(reg => {
-                const user = userMap[reg.studentEmail] || {};
+                const user = userDetailsMap[reg.studentEmail] || {};
+                const finalTeamName = reg.teamName ? reg.teamName : (user.fullName || "Individual");
+
+                let membersStr = "";
+                if (reg.teamMembers && reg.teamMembers.length > 0) {
+                    membersStr = reg.teamMembers.map(m => {
+                        const memberDetails = userDetailsMap[m.email] || {};
+                        const memberRoll = memberDetails.rollNo || m.rollNo || '-';
+                        return `${m.name} (${memberRoll})`;
+                    }).join(", ");
+                }
+
                 return [
-                    reg.teamName || "-",
-                    user.fullName || "N/A",
-                    user.year || "-",
+                    finalTeamName,
+                    user.fullName || "-",
                     reg.studentEmail,
+                    user.mobile || "-",
+                    user.rollNo || "-",
+                    membersStr,
+                    user.dept || "-",
+                    user.college || "-",
                     reg.attendance ? "Present" : "Absent"
                 ];
             });
 
             doc.autoTable({
-                head: [['Team', 'Leader Name', 'Year', 'Email', 'Status']],
+                head: [['Team/Name', 'Lead Name', 'Email', 'Mobile', 'Lead Roll', 'Members (Roll)', 'Dept', 'College', 'Status']],
                 body: tableData,
                 startY: 30,
+                styles: { fontSize: 9, overflow: 'linebreak' },
+                columnStyles: { 5: { cellWidth: 80 } }
             });
 
             doc.save(`${currentEventName}_Attendance.pdf`);
