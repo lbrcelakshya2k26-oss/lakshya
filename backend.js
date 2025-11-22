@@ -189,6 +189,13 @@ app.get('/admin/setup-scoring', isAuthenticated('admin'), (req, res) => {
 app.get('/admin/view-scores', isAuthenticated('admin'), (req, res) => {
     res.sendFile(path.join(__dirname, 'public/admin/view-scores.html'));
 });
+app.get('/admin/manage-events', isAuthenticated('admin'), (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/admin/manage-events.html'));
+});
+app.get('/admin/manage-scoring', isAuthenticated('admin'), (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/admin/manage-scoring.html'));
+});
+
 
 
 
@@ -250,8 +257,43 @@ app.post('/api/auth/send-otp', async (req, res) => {
 app.post('/api/register-event', isAuthenticated('participant'), async (req, res) => {
     // UPDATED: Now accepts teamName and teamMembers
     const { eventId, deptName, paymentMode, teamName, teamMembers } = req.body;
-    const registrationId = uuidv4();
     const user = req.session.user;
+
+    // 1. DUPLICATE REGISTRATION CHECK
+    try {
+        const checkParams = {
+            TableName: 'Lakshya_Registrations',
+            IndexName: 'StudentIndex',
+            KeyConditionExpression: 'studentEmail = :email',
+            FilterExpression: 'eventId = :eid',
+            ExpressionAttributeValues: {
+                ':email': user.email,
+                ':eid': eventId
+            }
+        };
+        const existing = await docClient.send(new QueryCommand(checkParams));
+        if (existing.Items && existing.Items.length > 0) {
+            return res.status(400).json({ error: 'You are already registered for this event.' });
+        }
+    } catch (e) {
+        console.error("Duplicate Check Error", e);
+        return res.status(500).json({ error: 'Server validation failed' });
+    }
+
+    // 2. FETCH EVENT TITLE (For Email)
+    let eventTitle = eventId; // Default fallback
+    try {
+        const eventRes = await docClient.send(new GetCommand({
+            TableName: 'Lakshya_Events',
+            Key: { eventId }
+        }));
+        if (eventRes.Item) eventTitle = eventRes.Item.title;
+    } catch (e) {
+        console.warn("Could not fetch event title for email");
+    }
+
+    const registrationId = uuidv4();
+    const paymentStatus = paymentMode === 'Online' ? 'PENDING' : 'PENDING_CASH';
 
     const params = {
         TableName: 'Lakshya_Registrations',
@@ -263,7 +305,7 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
             // Save Team Details
             teamName: teamName || null, 
             teamMembers: teamMembers || [], // Array of objects
-            paymentStatus: paymentMode === 'Online' ? 'PENDING' : 'PENDING_CASH',
+            paymentStatus: paymentStatus,
             paymentMode,
             attendance: false,
             registeredAt: new Date().toISOString()
@@ -272,6 +314,46 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
 
     try {
         await docClient.send(new PutCommand(params));
+
+        // --- EMAIL NOTIFICATION LOGIC ---
+        const subject = `Registration Confirmed: ${eventTitle}`;
+        const teamInfo = teamName ? `<p><strong>Team Name:</strong> ${teamName}</p>` : '';
+        
+        // HTML Receipt with Event Name
+        const emailBody = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd;">
+                <h2 style="color: #00d2ff; text-align: center;">LAKSHYA 2K26</h2>
+                <p>Dear Participant,</p>
+                <p>Thank you for registering for <strong>${eventTitle}</strong>. Below are your registration details:</p>
+                
+                <div style="background: #f9f9f9; padding: 15px; margin: 20px 0;">
+                    <p><strong>Registration ID:</strong> ${registrationId}</p>
+                    <p><strong>Event:</strong> ${eventTitle}</p>
+                    <p><strong>Department:</strong> ${deptName}</p>
+                    ${teamInfo}
+                    <p><strong>Payment Mode:</strong> ${paymentMode}</p>
+                    <p><strong>Payment Status:</strong> <span style="color: ${paymentStatus === 'COMPLETED' ? 'green' : 'orange'}">${paymentStatus}</span></p>
+                </div>
+
+                <p>If you selected Cash Payment, please pay at the registration desk to confirm your slot.</p>
+                <br>
+                <p>Best Regards,<br>Team LAKSHYA</p>
+            </div>
+        `;
+
+        // 1. Send to Team Leader (Current User)
+        await sendEmail(user.email, subject, emailBody);
+
+        // 2. Send to Team Members (If any)
+        if (teamMembers && Array.isArray(teamMembers) && teamMembers.length > 0) {
+            // Using Promise.all to send in parallel without blocking response too much
+            const memberEmails = teamMembers
+                .filter(m => m.email) // Ensure email exists
+                .map(m => sendEmail(m.email, subject, emailBody));
+            
+            await Promise.all(memberEmails);
+        }
+
         res.json({ message: 'Registration initiated', registrationId });
     } catch (err) {
         console.error("Reg Error", err);
@@ -289,16 +371,23 @@ app.post('/api/payment/create-order', async (req, res) => {
 });
 app.get('/api/participant/dashboard-stats', isAuthenticated('participant'), async (req, res) => {
     const userEmail = req.session.user.email;
-    const userName = req.session.user.name;
-
-    const params = {
-        TableName: 'Lakshya_Registrations',
-        IndexName: 'StudentIndex',
-        KeyConditionExpression: 'studentEmail = :email',
-        ExpressionAttributeValues: { ':email': userEmail }
-    };
 
     try {
+        // 1. Fetch User Details (To get Roll No)
+        const userRes = await docClient.send(new GetCommand({
+            TableName: 'Lakshya_Users',
+            Key: { email: userEmail }
+        }));
+        const userDetails = userRes.Item || {};
+
+        // 2. Fetch Registrations (For Stats)
+        const params = {
+            TableName: 'Lakshya_Registrations',
+            IndexName: 'StudentIndex',
+            KeyConditionExpression: 'studentEmail = :email',
+            ExpressionAttributeValues: { ':email': userEmail }
+        };
+
         const data = await docClient.send(new QueryCommand(params));
         const registrations = data.Items || [];
         
@@ -314,7 +403,10 @@ app.get('/api/participant/dashboard-stats', isAuthenticated('participant'), asyn
         }
 
         res.json({
-            name: userName,
+            name: userDetails.fullName || req.session.user.name,
+            rollNo: userDetails.rollNo || '-', // Added Roll No here
+            college: userDetails.college || '',
+            mobile: userDetails.mobile || '',
             totalRegistrations: total,
             paymentStatus: status
         });
@@ -324,7 +416,6 @@ app.get('/api/participant/dashboard-stats', isAuthenticated('participant'), asyn
         res.status(500).json({ error: 'Failed to load dashboard' });
     }
 });
-
 
 app.post('/api/payment/verify', async (req, res) => {
     const { registrationId, paymentId } = req.body;
@@ -474,28 +565,28 @@ app.post('/api/admin/create-user', isAuthenticated('admin'), async (req, res) =>
     }
 });
 // Add Committee Member
-app.post('/api/admin/add-committee-member', isAuthenticated('admin'), async (req, res) => {
-    const { name, role, category, imgUrl } = req.body;
-    const memberId = uuidv4();
+// app.post('/api/admin/add-committee-member', isAuthenticated('admin'), async (req, res) => {
+//     const { name, role, category, imgUrl } = req.body;
+//     const memberId = uuidv4();
 
-    const params = {
-        TableName: 'Lakshya_Committee', // You need to create this table or store in a general config table
-        Item: {
-            memberId,
-            name,
-            role,
-            category,
-            imgUrl
-        }
-    };
+//     const params = {
+//         TableName: 'Lakshya_Committee', // You need to create this table or store in a general config table
+//         Item: {
+//             memberId,
+//             name,
+//             role,
+//             category,
+//             imgUrl
+//         }
+//     };
 
-    try {
-        await docClient.send(new PutCommand(params));
-        res.json({ message: 'Member added' });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to add member' });
-    }
-});
+//     try {
+//         await docClient.send(new PutCommand(params));
+//         res.json({ message: 'Member added' });
+//     } catch (err) {
+//         res.status(500).json({ error: 'Failed to add member' });
+//     }
+// });
 
 // Add this inside the "Admin Routes" section of backend.js
 
@@ -867,64 +958,125 @@ app.get('/api/coordinator/student-details', isAuthenticated('coordinator'), asyn
     }
 });
 app.post('/api/coordinator/export-data', isAuthenticated('coordinator'), async (req, res) => {
-    const { emails } = req.body; // Array of emails from registrations
-    if (!emails || emails.length === 0) return res.json([]);
+    const { emails } = req.body; 
+    
+    if (!emails || !Array.isArray(emails) || emails.length === 0) {
+        return res.json({});
+    }
 
-    // Deduplicate emails
+    // Deduplicate emails to save processing
     const uniqueEmails = [...new Set(emails)];
-    
-    // DynamoDB BatchGetItem has a limit of 100 items (and 16MB). 
-    // For simplicity in this project, we will loop GetItem in parallel (Promise.all) 
-    // or scan the Users table if the list is huge. 
-    // Let's try parallel GetItem for up to 50 items, otherwise Scan + Filter in memory.
-    
-    try {
-        // Efficient approach: Scan Users table and filter in memory (Better for < 1000 users)
-        const scanParams = {
-            TableName: 'Lakshya_Users',
-            // Only fetch needed fields
-            ProjectionExpression: 'email, fullName, mobile, college, rollNo' 
-        };
-        const userData = await docClient.send(new ScanCommand(scanParams));
-        const allUsers = userData.Items;
 
-        // Map email -> user details
+    try {
+        // We use Parallel GetItem.
+        // FIX: 'year' is a reserved keyword in DynamoDB. 
+        // We must use ExpressionAttributeNames to fetch it safely.
+        const userPromises = uniqueEmails.map(email => 
+            docClient.send(new GetCommand({
+                TableName: 'Lakshya_Users',
+                Key: { email },
+                // We map #y to 'year' in ExpressionAttributeNames below
+                ProjectionExpression: 'email, fullName, rollNo, dept, mobile, #y, college',
+                ExpressionAttributeNames: { "#y": "year" } 
+            }))
+        );
+
+        const results = await Promise.all(userPromises);
+        
+        // Map the results: { "student@email.com": { fullName: "...", rollNo: "..." } }
         const userMap = {};
-        allUsers.forEach(u => userMap[u.email] = u);
+        results.forEach(r => {
+            if (r.Item) {
+                userMap[r.Item.email] = r.Item;
+            }
+        });
 
         res.json(userMap);
+
     } catch (err) {
-        console.error("Export Error:", err);
-        res.status(500).json({ error: 'Failed to fetch user details for export' });
+        console.error("Export Data Error:", err);
+        res.status(500).json({ error: 'Failed to fetch user details' });
     }
 });
-
 app.post('/api/admin/save-scheme', isAuthenticated('admin'), async (req, res) => {
     const { eventId, deptName, criteria } = req.body;
-    // criteria = [{ name: "Logic", max: 10 }, { name: "Syntax", max: 10 }]
-    
     const schemeId = `${eventId}#${deptName}`; // Composite ID
 
     const params = {
-        TableName: 'Lakshya_ScoringSchemes', // Needs to be created in DynamoDB
+        TableName: 'Lakshya_ScoringSchemes',
         Item: {
             schemeId,
             eventId,
             deptName,
             criteria: JSON.parse(criteria),
+            isLocked: false, // Default to open
             updatedAt: new Date().toISOString()
-        }
+        },
+        // CRITICAL: Prevents overwriting an existing scheme
+        ConditionExpression: 'attribute_not_exists(schemeId)'
     };
 
     try {
         await docClient.send(new PutCommand(params));
         res.json({ message: 'Scoring scheme saved successfully' });
     } catch (err) {
-        console.error("Save Scheme Error:", err);
-        res.status(500).json({ error: 'Failed to save scheme' });
+        if (err.name === 'ConditionalCheckFailedException') {
+            res.status(400).json({ error: 'A scoring scheme already exists for this Event & Department. Please use "Manage Scoring" to edit it.' });
+        } else {
+            console.error("Save Scheme Error:", err);
+            res.status(500).json({ error: 'Failed to save scheme' });
+        }
     }
 });
 
+app.get('/api/admin/all-schemes', isAuthenticated('admin'), async (req, res) => {
+    try {
+        const data = await docClient.send(new ScanCommand({ TableName: 'Lakshya_ScoringSchemes' }));
+        res.json(data.Items || []);
+    } catch (err) {
+        console.error("Fetch Schemes Error:", err);
+        res.status(500).json({ error: 'Failed to load schemes' });
+    }
+});
+
+// --- ADMIN: UPDATE SCHEME (Edit / Unlock) ---
+app.post('/api/admin/update-scheme', isAuthenticated('admin'), async (req, res) => {
+    const { schemeId, criteria, isLocked } = req.body;
+
+    const params = {
+        TableName: 'Lakshya_ScoringSchemes',
+        Key: { schemeId },
+        UpdateExpression: "set criteria = :c, isLocked = :l, updatedAt = :u",
+        ExpressionAttributeValues: {
+            ":c": JSON.parse(criteria),
+            ":l": isLocked,
+            ":u": new Date().toISOString()
+        }
+    };
+
+    try {
+        await docClient.send(new UpdateCommand(params));
+        res.json({ message: 'Scheme updated successfully' });
+    } catch (err) {
+        console.error("Update Scheme Error:", err);
+        res.status(500).json({ error: 'Failed to update scheme' });
+    }
+});
+
+// --- ADMIN: DELETE SCHEME ---
+app.post('/api/admin/delete-scheme', isAuthenticated('admin'), async (req, res) => {
+    const { schemeId } = req.body;
+    try {
+        await docClient.send(new DeleteCommand({
+            TableName: 'Lakshya_ScoringSchemes',
+            Key: { schemeId }
+        }));
+        res.json({ message: 'Scheme deleted successfully' });
+    } catch (err) {
+        console.error("Delete Scheme Error:", err);
+        res.status(500).json({ error: 'Failed to delete scheme' });
+    }
+});
 // 2. COORDINATOR: Get Data for Grading (Scheme + Present Students)
 app.get('/api/coordinator/scoring-details', isAuthenticated('coordinator'), async (req, res) => {
     const { eventId } = req.query;
@@ -1134,17 +1286,41 @@ app.delete('/api/cart', isAuthenticated('participant'), async (req, res) => {
 
 app.post('/api/admin/export-data', isAuthenticated('admin'), async (req, res) => {
     const { emails } = req.body;
-    if (!emails || emails.length === 0) return res.json({});
+    
+    if (!emails || !Array.isArray(emails) || emails.length === 0) {
+        return res.json({});
+    }
+
+    // Deduplicate emails
+    const uniqueEmails = [...new Set(emails)];
+
     try {
-        const scanParams = {
-            TableName: 'Lakshya_Users',
-            ProjectionExpression: 'email, fullName, mobile, college, rollNo, year'
-        };
-        const userData = await docClient.send(new ScanCommand(scanParams));
+        // Use Parallel GetItem for efficiency (instead of Scan)
+        // Fetching: email, fullName, mobile, college, rollNo, dept, year
+        const userPromises = uniqueEmails.map(email => 
+            docClient.send(new GetCommand({
+                TableName: 'Lakshya_Users',
+                Key: { email },
+                ProjectionExpression: 'email, fullName, mobile, college, rollNo, dept, #y',
+                ExpressionAttributeNames: { "#y": "year" } // Handle reserved keyword
+            }))
+        );
+
+        const results = await Promise.all(userPromises);
+        
         const userMap = {};
-        userData.Items.forEach(u => userMap[u.email] = u);
+        results.forEach(r => {
+            if (r.Item) {
+                userMap[r.Item.email] = r.Item;
+            }
+        });
+
         res.json(userMap);
-    } catch (err) { res.status(500).json({ error: 'Failed to export' }); }
+
+    } catch (err) {
+        console.error("Admin Export Error:", err);
+        res.status(500).json({ error: 'Failed to export data' });
+    }
 });
 
 app.get('/api/admin/scores', isAuthenticated('admin'), async (req, res) => {
@@ -1191,6 +1367,138 @@ app.get('/api/admin/scores', isAuthenticated('admin'), async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch scores' });
     }
 });
+
+// --- ADMIN: DELETE EVENT ---
+app.post('/api/admin/delete-event', isAuthenticated('admin'), async (req, res) => {
+    const { eventId } = req.body;
+    try {
+        await docClient.send(new DeleteCommand({
+            TableName: 'Lakshya_Events',
+            Key: { eventId }
+        }));
+        res.json({ message: 'Event deleted successfully' });
+    } catch (err) {
+        console.error("Delete Event Error:", err);
+        res.status(500).json({ error: 'Failed to delete event' });
+    }
+});
+
+// --- ADMIN: UPDATE EVENT ---
+app.post('/api/admin/update-event', isAuthenticated('admin'), upload.single('image'), async (req, res) => {
+    try {
+        const { eventId, title, type, description, fee, departments, sections } = req.body;
+        
+        // 1. Prepare Update Expression
+        // We build this dynamically based on whether an image was uploaded
+        let updateExp = "set title=:t, #type=:ty, description=:d, fee=:f, departments=:depts, sections=:sec";
+        let expValues = {
+            ':t': title,
+            ':ty': type,
+            ':d': description,
+            ':f': fee,
+            ':depts': JSON.parse(departments), // Parse back from FormData string
+            ':sec': JSON.parse(sections)
+        };
+        
+        // 2. Handle Image Upload (Only if new image provided)
+        if (req.file) {
+            const fileContent = req.file.buffer;
+            const fileName = `events/${uuidv4()}-${req.file.originalname}`;
+            const uploadParams = {
+                Bucket: 'hirewithusjobapplications',
+                Key: fileName,
+                Body: fileContent,
+                ContentType: req.file.mimetype
+            };
+            await s3Client.send(new PutObjectCommand(uploadParams));
+            const imageUrl = `https://hirewithusjobapplications.s3.ap-south-1.amazonaws.com/${fileName}`;
+            
+            updateExp += ", imageUrl=:img";
+            expValues[':img'] = imageUrl;
+        }
+
+        // 3. Update DynamoDB
+        const params = {
+            TableName: 'Lakshya_Events',
+            Key: { eventId },
+            UpdateExpression: updateExp,
+            ExpressionAttributeValues: expValues,
+            ExpressionAttributeNames: { "#type": "type" } // 'type' is reserved keyword
+        };
+
+        await docClient.send(new UpdateCommand(params));
+        res.json({ message: 'Event updated successfully' });
+
+    } catch (err) {
+        console.error("Update Event Error:", err);
+        res.status(500).json({ error: 'Failed to update event' });
+    }
+});
+
+app.post('/api/admin/add-committee-member', isAuthenticated('admin'), upload.single('image'), async (req, res) => {
+    try {
+        const { name, role, category } = req.body;
+        let imageUrl = 'assets/default-user.png'; // Fallback
+
+        if (req.file) {
+            const fileContent = req.file.buffer;
+            const fileName = `committee/${uuidv4()}-${req.file.originalname}`;
+            const uploadParams = {
+                Bucket: 'hirewithusjobapplications', // Your Bucket
+                Key: fileName,
+                Body: fileContent,
+                ContentType: req.file.mimetype
+            };
+            await s3Client.send(new PutObjectCommand(uploadParams));
+            imageUrl = `https://hirewithusjobapplications.s3.ap-south-1.amazonaws.com/${fileName}`;
+        }
+
+        const memberId = uuidv4();
+        const params = {
+            TableName: 'Lakshya_Committee',
+            Item: {
+                memberId,
+                name,
+                role,
+                category, // e.g., "Chief Patrons", "CSE", "ECE"
+                imageUrl,
+                createdAt: new Date().toISOString()
+            }
+        };
+
+        await docClient.send(new PutCommand(params));
+        res.json({ message: 'Member added successfully' });
+
+    } catch (err) {
+        console.error("Add Member Error:", err);
+        res.status(500).json({ error: 'Failed to add member' });
+    }
+});
+
+// 2. Get All Committee Members (Public)
+app.get('/api/committee', async (req, res) => {
+    try {
+        const data = await docClient.send(new ScanCommand({ TableName: 'Lakshya_Committee' }));
+        res.json(data.Items || []);
+    } catch (err) {
+        console.error("Fetch Committee Error:", err);
+        res.status(500).json({ error: 'Failed to fetch committee' });
+    }
+});
+
+// 3. Delete Committee Member (Admin)
+app.post('/api/admin/delete-committee-member', isAuthenticated('admin'), async (req, res) => {
+    const { memberId } = req.body;
+    try {
+        await docClient.send(new DeleteCommand({
+            TableName: 'Lakshya_Committee',
+            Key: { memberId }
+        }));
+        res.json({ message: 'Member deleted' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete' });
+    }
+});
 const PORT = process.env.PORT || 3000;
 
 if (require.main === module) {
@@ -1200,4 +1508,3 @@ if (require.main === module) {
 }
 
 module.exports = app;
-
