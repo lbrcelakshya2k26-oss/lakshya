@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | LAKSHYA 2K26</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         /* --- GLOBAL VARIABLES --- */
@@ -15,6 +16,7 @@
             --text-color: #ffffff;
             --glass-bg: rgba(10, 10, 20, 0.75);
             --glass-border: rgba(255, 255, 255, 0.1);
+            --mobile-glass: rgba(5, 5, 12, 0.95);
             --dark-overlay: linear-gradient(to bottom, rgba(5, 5, 15, 0.5), rgba(5, 5, 15, 0.9));
         }
 
@@ -32,23 +34,94 @@
             background: var(--dark-overlay); z-index: -1;
         }
 
-        /* --- NAVBAR (Copy of Home) --- */
+        /* --- NAVIGATION BAR (Updated) --- */
         nav {
-            position: fixed; top: 0; left: 0; width: 100%; padding: 1.2rem 4rem;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 1000; background: rgba(5, 5, 10, 0.6); backdrop-filter: blur(15px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(5, 5, 10, 0.6); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--glass-border);
+            transition: 0.4s;
         }
+
         .logo {
-            font-family: 'Montserrat', sans-serif; font-size: 1.8rem; font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
             background: linear-gradient(45deg, var(--primary-color), #ffffff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+            z-index: 1002;
+            cursor: pointer;
         }
-        .nav-links { display: flex; gap: 2.5rem; list-style: none; }
-        .nav-links a { text-decoration: none; color: white; font-weight: 500; transition: 0.3s; }
-        .nav-links a:hover { color: var(--primary-color); }
-        .menu-toggle { display: none; flex-direction: column; gap: 6px; cursor: pointer; }
-        .bar { width: 30px; height: 3px; background: white; border-radius: 3px; }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+            transition: 0.4s;
+            align-items: center;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .nav-links li a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--primary-color);
+            transition: 0.3s;
+        }
+
+        .nav-links li a:hover::after { width: 100%; }
+        .nav-links li a:hover { color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
+
+        .btn-login { padding: 0.6rem 1.5rem; border: 1px solid var(--primary-color); border-radius: 50px; color: var(--primary-color) !important; }
+        .btn-register { padding: 0.6rem 1.5rem; background: linear-gradient(45deg, var(--secondary-color), var(--primary-color)); border-radius: 50px; color: white !important; }
+
+        /* Mobile Menu Icon */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 21px;
+            cursor: pointer;
+            z-index: 1003;
+        }
+
+        .bar {
+            width: 100%;
+            height: 3px;
+            background-color: white;
+            border-radius: 3px;
+            transition: 0.4s;
+        }
+
+        .menu-toggle.is-active .bar:nth-child(1) { transform: translateY(9px) rotate(45deg); background: var(--primary-color); }
+        .menu-toggle.is-active .bar:nth-child(2) { opacity: 0; }
+        .menu-toggle.is-active .bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); background: var(--primary-color); }
 
         /* --- REGISTER CONTAINER --- */
         .container {
@@ -63,7 +136,7 @@
             border-radius: 20px;
             padding: 3rem;
             width: 100%;
-            max-width: 700px; /* Slightly wider for 3-col layout */
+            max-width: 700px;
             box-shadow: 0 0 40px rgba(0, 210, 255, 0.1);
             animation: fadeUp 0.8s ease-out;
         }
@@ -81,7 +154,7 @@
             background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
             border-radius: 8px; color: white; font-size: 1rem; outline: none; transition: 0.3s;
         }
-        select option { background: #111; color: white; } /* Fix dropdown bg */
+        select option { background: #111; color: white; }
         input:focus, select:focus { border-color: var(--primary-color); box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); }
 
         /* OTP Section */
@@ -95,7 +168,7 @@
         .btn-verify:disabled { background: #555; cursor: not-allowed; }
 
         .otp-input-group {
-            display: none; /* Hidden initially */
+            display: none;
             margin-top: 10px;
             animation: slideDown 0.4s ease;
         }
@@ -119,11 +192,26 @@
         @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             nav { padding: 1.2rem 2rem; }
-            .nav-links { display: none; } 
-            .menu-toggle { display: flex; }
-            .glass-card { padding: 2rem; }
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 1rem 1.5rem; }
+            .menu-toggle { display: flex; } 
+            
+            /* Mobile Drawer */
+            .nav-links {
+                position: fixed; top: 0; right: -100%; height: 100vh; width: 75%;
+                background: var(--mobile-glass); backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                flex-direction: column; justify-content: center; align-items: center;
+                gap: 2rem; border-left: 1px solid var(--glass-border);
+                box-shadow: -10px 0 30px rgba(0,0,0,0.5); z-index: 1001;
+            }
+            .nav-links.active { right: 0; }
+
+            .glass-card { padding: 1.5rem; }
             .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
         }
     </style>
@@ -133,15 +221,25 @@
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
 
+    <!-- NAVIGATION -->
     <nav>
-        <div class="logo">LAKSHYA 2K26</div>
+        <div class="logo" onclick="window.location.href='home.html'">LAKSHYA 2K26</div>
+        
         <ul class="nav-links" id="navLinks">
-            <li><a href="home.html">Home</a></li>
-            <li><a href="events.html">Events</a></li>
-            <li><a href="login.html">Login</a></li>
+            <li><a href="home.html" onclick="closeMenu()">Home</a></li>
+            <li><a href="brochure.html" onclick="closeMenu()">Brochure</a></li>
+            <li><a href="events.html" onclick="closeMenu()">Events</a></li>
+            <li><a href="culturals.html" onclick="closeMenu()">Culturals</a></li>
+            <li><a href="committee.html" onclick="closeMenu()">Committee</a></li>
+            <li><a href="contact.html" onclick="closeMenu()">Contact</a></li>
+            <li><a href="register.html" class="btn-register" onclick="closeMenu()">Register</a></li>
+            <li><a href="login.html" class="btn-login" onclick="closeMenu()">Login</a></li>
         </ul>
-        <div class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('active')">
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+
+        <div class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
         </div>
     </nav>
 
@@ -153,7 +251,6 @@
             </div>
             
             <form id="regForm" onsubmit="event.preventDefault(); registerUser();">
-                <!-- Name & College -->
                 <div class="form-grid-2">
                     <div class="input-group">
                         <label>Full Name</label>
@@ -165,7 +262,6 @@
                     </div>
                 </div>
 
-                <!-- Roll No & Mobile -->
                 <div class="form-grid-2">
                     <div class="input-group">
                         <label>Roll Number</label>
@@ -177,7 +273,6 @@
                     </div>
                 </div>
 
-                <!-- NEW INPUTS: Stream, Dept, Year -->
                 <div class="form-grid-3">
                     <div class="input-group">
                         <label>Stream</label>
@@ -192,7 +287,6 @@
                         </select>
                     </div>
                     
-                    <!-- CHANGED: Department is now a simple text input -->
                     <div class="input-group">
                         <label>Department</label>
                         <input type="text" id="dept" placeholder="Enter Department" required>
@@ -210,7 +304,6 @@
                     </div>
                 </div>
 
-                <!-- Email & OTP -->
                 <div class="input-group">
                     <label>Email Address</label>
                     <div class="otp-section">
@@ -239,6 +332,27 @@
     </div>
 
     <script>
+        // Navbar Logic
+        const nav = document.getElementById('navLinks');
+        const menuToggle = document.getElementById('mobile-menu');
+
+        function toggleMenu() {
+            nav.classList.toggle('active');
+            menuToggle.classList.toggle('is-active');
+        }
+
+        function closeMenu() {
+            nav.classList.remove('active');
+            menuToggle.classList.remove('is-active');
+        }
+
+        document.addEventListener('click', function(event) {
+            if (!nav.contains(event.target) && !menuToggle.contains(event.target) && nav.classList.contains('active')) {
+                closeMenu();
+            }
+        });
+
+        // OTP & Registration Logic
         async function sendOTP() {
             const email = document.getElementById('emailInput').value;
             const otpBtn = document.getElementById('otpBtn');
@@ -279,18 +393,13 @@
         }
 
         async function registerUser() {
-            // Collect Basic Info
             const fullName = document.getElementById('fullName').value;
             const college = document.getElementById('college').value;
             const rollNo = document.getElementById('rollNo').value;
             const mobile = document.getElementById('mobile').value;
-            
-            // Collect New Dropdown Info
             const stream = document.getElementById('stream').value;
             const dept = document.getElementById('dept').value;
             const year = document.getElementById('year').value;
-
-            // Collect Auth Info
             const email = document.getElementById('emailInput').value;
             const otp = document.getElementById('otpInput').value;
             const password = document.getElementById('password').value;
@@ -314,16 +423,9 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        fullName,
-                        college,
-                        rollNo,
-                        mobile,
-                        stream,  // Sent to backend
-                        dept,    // Sent to backend
-                        year,    // Sent to backend
-                        email,
-                        password,
-                        otp 
+                        fullName, college, rollNo, mobile,
+                        stream, dept, year,
+                        email, password, otp 
                     })
                 });
 

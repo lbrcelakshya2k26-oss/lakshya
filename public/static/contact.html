@@ -16,6 +16,7 @@
             --text-color: #ffffff;
             --glass-bg: rgba(15, 15, 30, 0.6);
             --glass-border: rgba(255, 255, 255, 0.1);
+            --mobile-glass: rgba(5, 5, 12, 0.95);
             --dark-overlay: linear-gradient(to bottom, rgba(5, 5, 15, 0.6), rgba(5, 5, 15, 0.95));
         }
 
@@ -33,26 +34,94 @@
             background: var(--dark-overlay); z-index: -1;
         }
 
-        /* --- NAVBAR --- */
+        /* --- NAVIGATION BAR (Updated) --- */
         nav {
-            position: fixed; top: 0; left: 0; width: 100%; padding: 1.2rem 4rem;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 1000; background: rgba(5, 5, 10, 0.6); backdrop-filter: blur(15px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(5, 5, 10, 0.6); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--glass-border);
+            transition: 0.4s;
         }
+
         .logo {
-            font-family: 'Montserrat', sans-serif; font-size: 1.8rem; font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
             background: linear-gradient(45deg, var(--primary-color), #ffffff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+            z-index: 1002;
+            cursor: pointer;
         }
-        .nav-links { display: flex; gap: 2.5rem; list-style: none; }
-        .nav-links a { text-decoration: none; color: white; font-weight: 500; transition: 0.3s; }
-        .nav-links a:hover { color: var(--primary-color); }
-        .menu-toggle { display: none; flex-direction: column; gap: 6px; cursor: pointer; }
-        .bar { width: 30px; height: 3px; background: white; border-radius: 3px; }
-        
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+            transition: 0.4s;
+            align-items: center;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .nav-links li a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--primary-color);
+            transition: 0.3s;
+        }
+
+        .nav-links li a:hover::after { width: 100%; }
+        .nav-links li a:hover { color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
+
         .btn-login { padding: 0.6rem 1.5rem; border: 1px solid var(--primary-color); border-radius: 50px; color: var(--primary-color) !important; }
         .btn-register { padding: 0.6rem 1.5rem; background: linear-gradient(45deg, var(--secondary-color), var(--primary-color)); border-radius: 50px; color: white !important; }
+
+        /* Mobile Menu Icon */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 21px;
+            cursor: pointer;
+            z-index: 1003;
+        }
+
+        .bar {
+            width: 100%;
+            height: 3px;
+            background-color: white;
+            border-radius: 3px;
+            transition: 0.4s;
+        }
+
+        .menu-toggle.is-active .bar:nth-child(1) { transform: translateY(9px) rotate(45deg); background: var(--primary-color); }
+        .menu-toggle.is-active .bar:nth-child(2) { opacity: 0; }
+        .menu-toggle.is-active .bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); background: var(--primary-color); }
 
         /* --- CONTACT SECTION --- */
         .container {
@@ -226,8 +295,6 @@
         .btn-submit:disabled {
             background: #555;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         /* Form Status Messages */
@@ -259,11 +326,33 @@
         @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 1024px) {
+            nav { padding: 1.2rem 2rem; }
+        }
+
         @media (max-width: 768px) {
-            .nav-links { display: none; }
+            nav { padding: 1rem 1.5rem; }
             .menu-toggle { display: flex; }
-            .contact-wrapper { grid-template-columns: 1fr; }
+            
+            /* Mobile Drawer */
+            .nav-links {
+                position: fixed; top: 0; right: -100%; height: 100vh; width: 75%;
+                background: var(--mobile-glass); backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                flex-direction: column; justify-content: center; align-items: center;
+                gap: 2rem; border-left: 1px solid var(--glass-border);
+                box-shadow: -10px 0 30px rgba(0,0,0,0.5); z-index: 1001;
+            }
+            .nav-links.active { right: 0; }
+
             .container { padding: 100px 5% 50px 5%; }
+            .section-title { font-size: 2.2rem; }
+            .contact-wrapper { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .logo { font-size: 1.4rem; }
         }
     </style>
 </head>
@@ -272,20 +361,25 @@
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
 
+    <!-- NAVIGATION -->
     <nav>
-        <div class="logo">LAKSHYA 2K26</div>
+        <div class="logo" onclick="window.location.href='home.html'">LAKSHYA 2K26</div>
+        
         <ul class="nav-links" id="navLinks">
-            <li><a href="home.html">Home</a></li>
-            <li><a href="brochure.html">Brochure</a></li>
-            <li><a href="events.html">Events</a></li>
-            <li><a href="culturals.html">Culturals</a></li>
-            <li><a href="committee.html">Committee</a></li>
-            <li><a href="contact.html" style="color: var(--primary-color);">Contact</a></li>
-            <li><a href="register.html" class="btn-register">Register</a></li>
-            <li><a href="login.html" class="btn-login">Login</a></li>
+            <li><a href="home.html" onclick="closeMenu()">Home</a></li>
+            <li><a href="brochure.html" onclick="closeMenu()">Brochure</a></li>
+            <li><a href="events.html" onclick="closeMenu()">Events</a></li>
+            <li><a href="culturals.html" onclick="closeMenu()">Culturals</a></li>
+            <li><a href="committee.html" onclick="closeMenu()">Committee</a></li>
+            <li><a href="contact.html" class="active" onclick="closeMenu()" style="color:var(--primary-color)">Contact</a></li>
+            <li><a href="register.html" class="btn-register" onclick="closeMenu()">Register</a></li>
+            <li><a href="login.html" class="btn-login" onclick="closeMenu()">Login</a></li>
         </ul>
-        <div class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('active')">
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+
+        <div class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
         </div>
     </nav>
 
@@ -370,6 +464,27 @@
     </div>
 
     <script>
+        // Navbar Logic
+        const nav = document.getElementById('navLinks');
+        const menuToggle = document.getElementById('mobile-menu');
+
+        function toggleMenu() {
+            nav.classList.toggle('active');
+            menuToggle.classList.toggle('is-active');
+        }
+
+        function closeMenu() {
+            nav.classList.remove('active');
+            menuToggle.classList.remove('is-active');
+        }
+
+        document.addEventListener('click', function(event) {
+            if (!nav.contains(event.target) && !menuToggle.contains(event.target) && nav.classList.contains('active')) {
+                closeMenu();
+            }
+        });
+
+        // Formspree AJAX
         const form = document.getElementById('contactForm');
         const formStatus = document.getElementById('formStatus');
         const submitBtn = document.getElementById('submitBtn');
@@ -377,10 +492,9 @@
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Disable button and show loading text
             submitBtn.disabled = true;
             submitBtn.innerText = "Sending...";
-            formStatus.innerHTML = ''; // Clear previous messages
+            formStatus.innerHTML = '';
 
             const data = new FormData(form);
             
@@ -388,28 +502,20 @@
                 const response = await fetch(form.action, {
                     method: 'POST',
                     body: data,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'Accept': 'application/json' }
                 });
                 
                 if (response.ok) {
                     formStatus.innerHTML = '<div class="success-msg"><i class="fa-solid fa-circle-check"></i> Thank you! Our team will reach you shortly.</div>';
-                    form.reset(); // Clear the form
+                    form.reset();
                 } else {
                     const jsonData = await response.json();
-                    if(jsonData.errors) {
-                         // If Formspree sends detailed errors
-                         const errorMessages = jsonData.errors.map(error => error.message).join(", ");
-                         formStatus.innerHTML = `<div class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> ${errorMessages}</div>`;
-                    } else {
-                        formStatus.innerHTML = '<div class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> Oops! There was a problem submitting your form.</div>';
-                    }
+                    const errorMessages = jsonData.errors ? jsonData.errors.map(error => error.message).join(", ") : "Oops! There was a problem submitting your form.";
+                    formStatus.innerHTML = `<div class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> ${errorMessages}</div>`;
                 }
             } catch (error) {
                 formStatus.innerHTML = '<div class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> Network error. Please try again later.</div>';
             } finally {
-                // Re-enable button
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Send Message";
             }
