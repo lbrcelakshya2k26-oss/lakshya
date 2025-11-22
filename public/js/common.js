@@ -61,6 +61,6 @@ function toggleSidebar() {
 function logout() {
     if(confirm('Are you sure you want to logout?')) {
         localStorage.clear();
-        window.location.href = 'login.html'; // Adjust path as needed
+        window.location.href = '/login'; // Adjust path as needed
     }
 }
