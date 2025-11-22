@@ -6,85 +6,124 @@
     <title>My Registrations | LAKSHYA 2K26</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         /* --- COSMIC THEME --- */
         :root {
             --primary-color: #00d2ff;
+            --secondary-color: #3a7bd5;
             --accent-color: #ff00cc;
             --glass-bg: rgba(20, 20, 35, 0.85);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-color: #ffffff;
+            --sidebar-width: 260px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background-color: #0a0a0a; color: var(--text-color); display: flex; min-height: 100vh; overflow-x: hidden; }
 
         /* Background */
-        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('../assets/admin-block.jpg') no-repeat center center/cover; z-index: -2; }
-        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 15, 0.92); z-index: -1; }
+        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('../assets/admin-block.jpg') no-repeat center center/cover; z-index: -2; opacity: 0.6; }
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 12, 0.92); z-index: -1; }
 
-        /* --- SIDEBAR (Responsive) --- */
+        /* --- MOBILE HEADER --- */
+        .mobile-header {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background: var(--glass-bg); border-bottom: 1px solid var(--glass-border);
+            z-index: 1100; align-items: center; justify-content: space-between; padding: 0 20px;
+            backdrop-filter: blur(10px);
+        }
+        .mobile-logo { font-family: 'Montserrat', sans-serif; font-weight: 900; color: white; font-size: 1.2rem; }
+        .menu-toggle { font-size: 1.5rem; color: var(--primary-color); cursor: pointer; }
+        
+        /* --- SIDEBAR --- */
         .sidebar {
-            width: 260px; background: var(--glass-bg); border-right: 1px solid var(--glass-border);
+            width: var(--sidebar-width); background: var(--glass-bg); border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(10px); padding: 2rem; display: flex; flex-direction: column;
             position: fixed; height: 100vh; z-index: 1000; transition: transform 0.3s ease-in-out; left: 0; top: 0;
         }
         .logo { font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 900; color: var(--primary-color); margin-bottom: 3rem; text-align: center; }
         .menu { list-style: none; flex-grow: 1; }
         .menu li { margin-bottom: 1rem; }
-        .menu a { text-decoration: none; color: #ccc; display: flex; align-items: center; gap: 15px; padding: 10px; border-radius: 8px; transition: 0.3s; }
-        .menu a:hover, .menu a.active { background: rgba(0, 210, 255, 0.1); color: var(--primary-color); }
+        .menu a { text-decoration: none; color: #ccc; display: flex; align-items: center; gap: 15px; padding: 12px 15px; border-radius: 8px; transition: 0.3s; font-weight: 500; }
+        .menu a:hover, .menu a.active { background: rgba(0, 210, 255, 0.15); color: var(--primary-color); border: 1px solid rgba(0, 210, 255, 0.2); }
         .logout { color: #ff4444; cursor: pointer; margin-top: auto; }
 
-        /* --- MOBILE HEADER --- */
-        .mobile-header { display: none; }
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; opacity: 0; transition: opacity 0.3s; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
+        .sidebar-overlay.active { display: block; }
+        .close-sidebar-btn { display: none; font-size: 1.2rem; color: white; cursor: pointer; }
 
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.active { transform: translateX(0); }
-            .main { margin-left: 0 !important; width: 100% !important; padding: 1.5rem; padding-top: 80px !important; }
-            .mobile-header {
-                display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-                background: rgba(15, 15, 30, 0.95); backdrop-filter: blur(10px); z-index: 900;
-                align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--glass-border);
-            }
-            .mobile-logo { font-family: 'Montserrat', sans-serif; font-weight: 900; color: white; }
-            .menu-toggle { font-size: 1.5rem; color: var(--primary-color); cursor: pointer; }
+        /* --- MAIN CONTENT --- */
+        .main { flex-grow: 1; padding: 2.5rem; margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); overflow-y: auto; }
+        .container { max-width: 1000px; margin: 0 auto; padding-bottom: 80px; }
+
+        .page-header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .page-header h2 { font-family: 'Montserrat', sans-serif; font-size: 2rem; color: white; }
+
+        /* --- REGISTRATION CARDS --- */
+        .reg-list { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        
+        .reg-card {
+            background: rgba(30, 30, 40, 0.6); border: 1px solid var(--glass-border);
+            border-radius: 15px; padding: 1.5rem; display: flex; flex-wrap: wrap; 
+            align-items: center; justify-content: space-between; gap: 20px;
+            transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .reg-card:hover { transform: translateY(-3px); border-color: var(--primary-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .reg-card::before { content:''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--primary-color); }
+        .reg-card.pending::before { background: #ffc107; }
+
+        .reg-details { flex: 1; min-width: 200px; }
+        .reg-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; color: white; font-family: 'Montserrat'; }
+        .reg-meta { color: #aaa; font-size: 0.9rem; display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 8px; }
+        .reg-meta span { display: flex; align-items: center; gap: 5px; }
+        .reg-meta i { color: var(--primary-color); }
+
+        .team-badge { 
+            background: rgba(255, 0, 204, 0.1); border: 1px dashed var(--accent-color); 
+            color: #ff88dd; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; 
+            display: inline-block; margin-top: 5px;
         }
 
-        /* Main Content */
-        .main { flex-grow: 1; padding: 2rem; margin-left: 260px; width: calc(100% - 260px); overflow-y: auto; }
-        .container { max-width: 1000px; margin: 0 auto; }
-
-        h2 { margin-bottom: 2rem; font-family: 'Montserrat', sans-serif; color: var(--primary-color); }
-
-        /* Table Style */
-        .glass-table-container {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
-            border-radius: 15px; padding: 1.5rem; overflow-x: auto;
+        .status-badge {
+            padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;
         }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        th { color: var(--primary-color); font-weight: 600; text-transform: uppercase; font-size: 0.9rem; }
-        td { color: #ddd; font-size: 0.95rem; }
-        tr:last-child td { border-bottom: none; }
+        .status-paid { background: rgba(76, 175, 80, 0.2); color: #4caf50; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .status-pending { background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3); }
 
-        /* Status Badges */
-        .status { padding: 5px 10px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; }
-        .status.pending { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
-        .status.paid { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+        .reg-actions { display: flex; gap: 10px; }
+        
+        .btn-action {
+            padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; 
+            transition: 0.3s; font-size: 0.9rem; border: none; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-pay { background: #ffc107; color: black; }
+        .btn-pay:hover { background: #ffdb4d; transform: translateY(-2px); }
+        
+        .btn-receipt { background: rgba(0, 210, 255, 0.1); color: var(--primary-color); border: 1px solid var(--primary-color); }
+        .btn-receipt:hover { background: var(--primary-color); color: black; }
 
-        /* Action Buttons */
-        .btn-pay {
-            background: var(--primary-color); color: black; border: none; padding: 5px 15px;
-            border-radius: 5px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        .empty-state { text-align: center; padding: 50px 20px; color: #888; }
+        .btn-browse { 
+            margin-top: 20px; display: inline-block; padding: 12px 30px; 
+            border: 1px solid var(--primary-color); color: var(--primary-color); 
+            text-decoration: none; border-radius: 50px; font-weight: 600; transition: 0.3s; 
         }
-        .btn-print {
-            background: transparent; border: 1px solid #ccc; color: #ccc; padding: 5px 15px;
-            border-radius: 5px; cursor: pointer; transition: 0.2s;
+        .btn-browse:hover { background: var(--primary-color); color: black; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .sidebar { position: fixed; left: -100%; width: 280px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+            .sidebar.active { left: 0; transform: translateX(0); }
+            .mobile-header { display: flex; }
+            .close-sidebar-btn { display: block; }
+            
+            .main { width: 100%; margin-left: 0; padding: 1.5rem; padding-top: 90px; }
         }
-        .btn-print:hover { border-color: white; color: white; }
+
+        @media (max-width: 600px) {
+            .reg-card { flex-direction: column; align-items: flex-start; }
+            .reg-actions { width: 100%; justify-content: flex-end; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+            .btn-action { flex: 1; justify-content: center; }
+        }
     </style>
 </head>
 <body>
@@ -92,160 +131,237 @@
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
 
-    <!-- Sidebar Injected by Common JS -->
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="mobile-logo">LAKSHYA 2K26</div>
+        <i class="fa-solid fa-bars menu-toggle" onclick="toggleSidebar()"></i>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            LAKSHYA 2K26 
+            <i class="fa-solid fa-xmark close-sidebar-btn" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="menu">
+            <li><a href="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+            <li><a href="events"><i class="fa-solid fa-calendar-days"></i> Events</a></li>
+            <li><a href="cart"><i class="fa-solid fa-cart-shopping"></i> My Cart</a></li>
+            <li><a href="my-registrations" class="active"><i class="fa-solid fa-clipboard-check"></i> Registrations</a></li>
+            <li><a href="feedback"><i class="fa-solid fa-comment-dots"></i> Feedback</a></li>
+            <li><a onclick="logout()" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
     <main class="main">
         <div class="container">
-            <h2>My Registrations</h2>
+            <div class="page-header">
+                <h2>My Registrations</h2>
+            </div>
             
-            <div class="glass-table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Event Name</th>
-                            <th>Department</th>
-                            <th>Payment</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="regTableBody">
-                        <tr><td colspan="5" style="text-align:center;">Loading registrations...</td></tr>
-                    </tbody>
-                </table>
+            <div id="regContainer" class="reg-list">
+                <div class="empty-state">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;"></i>
+                    <p style="margin-top:10px;">Loading records...</p>
+                </div>
             </div>
         </div>
     </main>
 
-    <script>const CURRENT_PAGE = 'my-registrations';</script>
-    <script src="/js/common.js"></script>
-
-    <!-- Original Logic -->
     <script>
-        // Cache event names to display nice titles instead of IDs
-        let eventNames = {}; 
+        let allRegistrations = [];
+        let eventNames = {};
+        let currentUser = { name: 'Student', rollNo: '' };
 
-        async function loadRegistrations() {
-            const tbody = document.getElementById('regTableBody');
-            
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        async function init() {
             try {
-                // 1. First fetch events to create a name map (Optimization)
-                try {
-                    const eventsRes = await fetch('/api/events');
-                    const events = await eventsRes.json();
-                    events.forEach(e => eventNames[e.eventId] = e.title);
-                } catch (e) { console.log("Could not load event names"); }
+                // 1. Fetch Events (Name Mapping)
+                const resEvents = await fetch('/api/events');
+                const events = await resEvents.json();
+                events.forEach(e => eventNames[e.eventId] = e.title);
 
-                // 2. Fetch Registrations
-                const res = await fetch('/api/participant/my-registrations-data');
+                // 2. Fetch User Profile (For Receipt)
+                const resUser = await fetch('/api/participant/dashboard-stats');
+                if(resUser.ok) currentUser = await resUser.json();
+
+                // 3. Fetch Registrations
+                const resReg = await fetch('/api/participant/my-registrations-data');
+                if(resReg.redirected) { window.location.href = '../login'; return; }
                 
-                // Handle Redirects (Session Expired)
-                if (res.redirected) {
-                    alert("Session expired. Please login again.");
-                    window.location.href = '../static/login ';
-                    return;
-                }
-
-                if (!res.ok) {
-                    const errText = await res.text();
-                    throw new Error(`Server Error: ${res.status} - ${errText}`);
-                }
-
-                const data = await res.json();
-                
-                tbody.innerHTML = '';
-
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#aaa;">No registrations found. Go to Events to register.</td></tr>';
-                    return;
-                }
-
-                data.forEach(reg => {
-                    const statusClass = reg.paymentStatus === 'COMPLETED' ? 'paid' : 'pending';
-                    const statusText = reg.paymentStatus === 'COMPLETED' ? 'Paid' : 'Pending';
-                    const eventTitle = eventNames[reg.eventId] || "Event ID: " + reg.eventId.substring(0,8);
-                    
-                    // Action Logic
-                    let actionBtn = '';
-                    if (reg.paymentStatus !== 'COMPLETED') {
-                        actionBtn = `<button class="btn-pay" onclick="payNow('${reg.registrationId}')">Pay Now</button>`;
-                    } else {
-                        actionBtn = `<button class="btn-print" onclick="printReceipt('${reg.registrationId}', '${eventTitle}')"><i class="fa-solid fa-print"></i> Receipt</button>`;
-                    }
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td style="font-weight:500; color:white;">${eventTitle}</td>
-                            <td>${reg.deptName}</td>
-                            <td><span class="status ${statusClass}">${statusText}</span></td>
-                            <td>${reg.attendance ? '<span style="color:#4caf50">Attended</span>' : '<span style="color:#aaa">Not Marked</span>'}</td>
-                            <td>${actionBtn}</td>
-                        </tr>
-                    `;
-                });
+                allRegistrations = await resReg.json();
+                renderRegistrations();
 
             } catch (e) {
                 console.error(e);
-                // Better error message for user
-                let msg = "Error loading data.";
-                if (e.message.includes("StudentIndex")) msg = "Database Error: Student Index missing.";
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ff4444;">${msg} <br> <small>${e.message}</small></td></tr>`;
+                document.getElementById('regContainer').innerHTML = '<div class="empty-state" style="color:red;">Error loading data.</div>';
             }
         }
 
+        function renderRegistrations() {
+            const container = document.getElementById('regContainer');
+            container.innerHTML = '';
+
+            if (allRegistrations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-clipboard-list" style="font-size:4rem; opacity:0.2; margin-bottom:15px;"></i>
+                        <h3>No Registrations Yet</h3>
+                        <p>You haven't registered for any events.</p>
+                        <a href="events" class="btn-browse">Browse Events</a>
+                    </div>
+                `;
+                return;
+            }
+
+            allRegistrations.forEach(reg => {
+                const eventTitle = eventNames[reg.eventId] || reg.eventId;
+                const isPaid = reg.paymentStatus === 'COMPLETED';
+                const statusBadge = isPaid 
+                    ? `<span class="status-badge status-paid"><i class="fa-solid fa-check"></i> Paid</span>`
+                    : `<span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> Pending</span>`;
+                
+                const cardClass = isPaid ? 'reg-card' : 'reg-card pending';
+
+                let teamHtml = '';
+                if(reg.teamName) {
+                    const count = (reg.teamMembers ? reg.teamMembers.length : 0) + 1;
+                    teamHtml = `<div class="team-badge"><i class="fa-solid fa-users"></i> ${reg.teamName} (${count})</div>`;
+                }
+
+                let actionBtn = '';
+                if (isPaid) {
+                    actionBtn = `<button class="btn-action btn-receipt" onclick="printReceipt('${reg.registrationId}')"><i class="fa-solid fa-print"></i> Receipt</button>`;
+                } else {
+                    actionBtn = `<button class="btn-action btn-pay" onclick="payNow('${reg.registrationId}')"><i class="fa-solid fa-credit-card"></i> Pay Now</button>`;
+                }
+
+                const div = document.createElement('div');
+                div.className = cardClass;
+                div.innerHTML = `
+                    <div class="reg-details">
+                        <div class="reg-title">${eventTitle}</div>
+                        <div class="reg-meta">
+                            <span><i class="fa-solid fa-building-columns"></i> ${reg.deptName}</span>
+                            <span><i class="fa-solid fa-calendar"></i> ${new Date(reg.registeredAt).toLocaleDateString()}</span>
+                        </div>
+                        ${teamHtml}
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+                        ${statusBadge}
+                    </div>
+                    <div class="reg-actions">
+                        ${actionBtn}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
         async function payNow(regId) {
-            if(confirm("Proceed to Payment Gateway?")) {
+            if(confirm("Proceed to Payment?")) {
                 try {
                     const res = await fetch('/api/payment/verify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ registrationId: regId, paymentId: "mock_pay_later" })
+                        body: JSON.stringify({ registrationId: regId, paymentId: "mock_pay_now" })
                     });
-                    if(res.ok) {
-                        alert("Payment Successful!");
-                        loadRegistrations();
-                    } else {
-                        alert("Payment failed.");
-                    }
-                } catch(e) {
-                    alert("Connection error.");
-                }
+                    if(res.ok) { alert("Payment Successful!"); init(); }
+                    else alert("Payment failed.");
+                } catch(e) { alert("Connection error."); }
             }
         }
 
-        function printReceipt(regId, eventTitle) {
-            const win = window.open('', '', 'width=600,height=500');
+        function printReceipt(regId) {
+            const reg = allRegistrations.find(r => r.registrationId === regId);
+            if (!reg) return;
+
+            const eventTitle = eventNames[reg.eventId] || "Event";
+            
+            // --- DATE FIX: Use Registration/Payment Time from DB ---
+            // We prefer 'paymentDate' if it exists, otherwise 'registeredAt'.
+            // This ensures the date is fixed and not "now".
+            const timestamp = reg.paymentDate || reg.registeredAt || new Date().toISOString();
+            const fixedDate = new Date(timestamp);
+            const dateStr = fixedDate.toLocaleDateString();
+            const timeStr = fixedDate.toLocaleTimeString();
+
+            // Members Table
+            let membersHtml = '';
+            if (reg.teamName) {
+                membersHtml = `<p><strong>Team:</strong> ${reg.teamName}</p>
+                <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:13px;">
+                    <tr style="background:#f4f4f4;"><th style="border:1px solid #ddd; padding:5px;">Name</th><th style="border:1px solid #ddd; padding:5px;">Roll No</th></tr>
+                    <tr><td style="border:1px solid #ddd; padding:5px;">${currentUser.name} (Lead)</td><td style="border:1px solid #ddd; padding:5px;">${currentUser.rollNo || '-'}</td></tr>`;
+                
+                if (reg.teamMembers) {
+                    reg.teamMembers.forEach(m => {
+                        membersHtml += `<tr><td style="border:1px solid #ddd; padding:5px;">${m.name}</td><td style="border:1px solid #ddd; padding:5px;">${m.roll || '-'}</td></tr>`;
+                    });
+                }
+                membersHtml += `</table>`;
+            } else {
+                membersHtml = `<p><strong>Participant:</strong> ${currentUser.name}</p><p><strong>Roll No:</strong> ${currentUser.rollNo || '-'}</p>`;
+            }
+
+            const win = window.open('', '', 'width=700,height=700');
             win.document.write(`
                 <html>
-                    <head>
-                        <title>Receipt</title>
-                        <style>
-                            body { font-family: 'Helvetica', sans-serif; padding: 40px; text-align: center; border: 2px solid #333; margin: 20px; }
-                            h2 { color: #00d2ff; }
-                            .details { text-align: left; margin: 20px auto; width: 80%; }
-                            .status { color: green; font-weight: bold; border: 1px solid green; padding: 5px; display: inline-block; }
-                        </style>
-                    </head>
-                    <body>
+                <head>
+                    <title>Receipt - ${eventTitle}</title>
+                    <style>
+                        body { font-family: 'Helvetica', sans-serif; padding: 40px; text-align: center; color: #333; }
+                        .receipt-box { border: 2px solid #00d2ff; padding: 30px; max-width: 500px; margin: 0 auto; border-radius: 10px; }
+                        h2 { color: #00d2ff; margin-bottom: 5px; text-transform: uppercase; }
+                        .meta { display: flex; justify-content: space-between; margin: 20px 0; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 0.9rem; }
+                        .details { text-align: left; margin: 20px 0; line-height: 1.6; }
+                        .status { display: inline-block; margin-top: 20px; padding: 8px 20px; border: 2px solid green; color: green; font-weight: bold; font-size: 1.2rem; transform: rotate(-5deg); border-radius: 5px; }
+                        .btn-print { margin-top: 20px; padding: 10px 20px; background: #333; color: white; border: none; cursor: pointer; border-radius: 5px; }
+                        @media print { .btn-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-box">
                         <h2>LAKSHYA 2K26</h2>
-                        <h3>Official Payment Receipt</h3>
-                        <hr>
-                        <div class="details">
-                            <p><strong>Registration ID:</strong> ${regId}</p>
-                            <p><strong>Event:</strong> ${eventTitle}</p>
-                            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-                            <p><strong>Amount Paid:</strong> ₹200</p>
+                        <p style="color:#666; margin-top:0;">Official Payment Receipt</p>
+                        
+                        <div class="meta">
+                            <span><strong>ID:</strong> ${regId.substring(0,8).toUpperCase()}</span>
+                            <span><strong>Date:</strong> ${dateStr} ${timeStr}</span>
                         </div>
-                        <div class="status">PAID</div>
-                        <br><br><br>
-                        <p>Thank you for participating!</p>
-                        <button onclick="window.print()" style="padding:10px 20px; cursor:pointer;">Print Receipt</button>
-                    </body>
+
+                        <div class="details">
+                            <p style="font-size:1.2rem;"><strong>Event:</strong> ${eventTitle}</p>
+                            <p><strong>Department:</strong> ${reg.deptName}</p>
+                            <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
+                            ${membersHtml}
+                            <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>Payment Mode: <strong>${reg.paymentMode || 'Online'}</strong></span>
+                                <span style="font-size:1.3rem;"><strong>₹${reg.amount || '200'}</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="status">PAID & CONFIRMED</div>
+                    </div>
+                    <button class="btn-print" onclick="window.print()">Print Receipt</button>
+                </body>
                 </html>
             `);
         }
 
-        loadRegistrations();
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../login';
+        }
+
+        init();
     </script>
 </body>
 </html>

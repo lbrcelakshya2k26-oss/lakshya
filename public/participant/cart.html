@@ -10,73 +10,146 @@
         /* --- COSMIC THEME --- */
         :root {
             --primary-color: #00d2ff;
+            --secondary-color: #3a7bd5;
             --accent-color: #ff00cc;
             --glass-bg: rgba(20, 20, 35, 0.85);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-color: #ffffff;
+            --sidebar-width: 260px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background-color: #0a0a0a; color: var(--text-color); display: flex; min-height: 100vh; overflow-x: hidden; }
+        body { background-color: #050510; color: var(--text-color); display: flex; min-height: 100vh; overflow-x: hidden; }
 
         /* Background */
-        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('../assets/admin-block.jpg') no-repeat center center/cover; z-index: -2; }
-        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 15, 0.92); z-index: -1; }
+        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('../assets/admin-block.jpg') no-repeat center center/cover; z-index: -2; opacity: 0.6; }
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 12, 0.92); z-index: -1; }
 
+        /* --- MOBILE HEADER --- */
+        .mobile-header {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background: var(--glass-bg); border-bottom: 1px solid var(--glass-border);
+            z-index: 1100; align-items: center; justify-content: space-between; padding: 0 20px;
+            backdrop-filter: blur(10px);
+        }
+        .mobile-logo { font-family: 'Montserrat', sans-serif; font-weight: 900; color: white; font-size: 1.2rem; }
+        .menu-toggle { font-size: 1.5rem; color: var(--primary-color); cursor: pointer; }
+        
         /* --- SIDEBAR --- */
         .sidebar {
-            width: 260px; background: var(--glass-bg); border-right: 1px solid var(--glass-border);
+            width: var(--sidebar-width); background: var(--glass-bg); border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(10px); padding: 2rem; display: flex; flex-direction: column;
             position: fixed; height: 100vh; z-index: 1000; transition: transform 0.3s ease-in-out; left: 0; top: 0;
         }
         .logo { font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 900; color: var(--primary-color); margin-bottom: 3rem; text-align: center; }
         .menu { list-style: none; flex-grow: 1; }
         .menu li { margin-bottom: 1rem; }
-        .menu a { text-decoration: none; color: #ccc; display: flex; align-items: center; gap: 15px; padding: 10px; border-radius: 8px; transition: 0.3s; }
-        .menu a:hover, .menu a.active { background: rgba(0, 210, 255, 0.1); color: var(--primary-color); }
+        .menu a { text-decoration: none; color: #ccc; display: flex; align-items: center; gap: 15px; padding: 12px 15px; border-radius: 8px; transition: 0.3s; font-weight: 500; }
+        .menu a:hover, .menu a.active { background: rgba(0, 210, 255, 0.15); color: var(--primary-color); border: 1px solid rgba(0, 210, 255, 0.2); }
         .logout { color: #ff4444; cursor: pointer; margin-top: auto; }
 
-        /* Main Content */
-        .main { flex-grow: 1; padding: 2rem; margin-left: 260px; width: calc(100% - 260px); overflow-y: auto; }
-        .container { max-width: 900px; margin: 0 auto; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
+        .sidebar-overlay.active { display: block; }
+        .close-sidebar-btn { display: none; font-size: 1.2rem; color: white; cursor: pointer; }
 
-        h2 { margin-bottom: 2rem; font-family: 'Montserrat', sans-serif; color: var(--primary-color); }
+        /* --- MAIN CONTENT --- */
+        .main { flex-grow: 1; padding: 2.5rem; margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); overflow-y: auto; }
+        .container { max-width: 1000px; margin: 0 auto; padding-bottom: 80px; }
 
-        /* Cart Items */
+        .page-header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .page-header h2 { font-family: 'Montserrat', sans-serif; font-size: 2rem; color: white; }
+        .item-count { background: var(--primary-color); color: black; padding: 2px 10px; border-radius: 50px; font-size: 0.9rem; font-weight: bold; }
+
+        /* --- CART ITEMS --- */
         .cart-list { display: flex; flex-direction: column; gap: 1.5rem; }
+        
         .cart-item {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
-            border-radius: 10px; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(30, 30, 40, 0.6); border: 1px solid var(--glass-border);
+            border-radius: 15px; padding: 1.5rem; display: flex; flex-wrap: wrap; 
+            align-items: center; justify-content: space-between; gap: 20px;
+            transition: 0.3s; position: relative; overflow: hidden;
         }
-        .item-info h3 { font-size: 1.2rem; margin-bottom: 5px; color: white; }
-        .item-info p { color: #aaa; font-size: 0.9rem; }
-        .item-price { font-size: 1.2rem; font-weight: 700; color: #4caf50; margin-right: 20px; }
-        .btn-remove { color: #ff4444; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
-        .btn-remove:hover { transform: scale(1.2); }
+        .cart-item:hover { transform: translateY(-3px); border-color: var(--primary-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .cart-item::before { content:''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--accent-color); }
 
-        /* Summary Section */
+        .item-details { flex: 1; min-width: 200px; }
+        .item-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; color: white; font-family: 'Montserrat'; }
+        .item-meta { color: #aaa; font-size: 0.9rem; display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 8px; }
+        .item-meta span { display: flex; align-items: center; gap: 5px; }
+        .item-meta i { color: var(--primary-color); }
+
+        .team-badge { 
+            background: rgba(255, 0, 204, 0.1); border: 1px dashed var(--accent-color); 
+            color: #ff88dd; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; 
+            display: inline-block; margin-top: 8px;
+        }
+
+        .item-actions { display: flex; align-items: center; gap: 25px; }
+        .item-price { font-size: 1.5rem; font-weight: 700; color: #4caf50; letter-spacing: 1px; }
+        
+        .btn-remove { 
+            width: 40px; height: 40px; border-radius: 50%; 
+            background: rgba(255, 68, 68, 0.1); color: #ff4444; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; transition: 0.3s; font-size: 1rem;
+        }
+        .btn-remove:hover { background: #ff4444; color: white; transform: rotate(90deg); }
+
+        /* --- SUMMARY SECTION --- */
         .cart-summary {
-            margin-top: 3rem; padding: 2rem; background: rgba(0, 210, 255, 0.05);
-            border: 1px solid var(--primary-color); border-radius: 15px; text-align: right;
+            margin-top: 3rem; padding: 2rem; 
+            background: rgba(20, 20, 35, 0.9); border: 1px solid var(--primary-color); 
+            border-radius: 15px; display: flex; flex-wrap: wrap; 
+            align-items: center; justify-content: space-between; gap: 20px;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.1);
         }
-        .total-row { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
-        .total-row span { color: var(--primary-color); }
 
-        .payment-options { margin-bottom: 1.5rem; display: flex; gap: 20px; justify-content: flex-end; }
-        .radio-label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #ddd; }
-        input[type="radio"] { accent-color: var(--primary-color); width: 18px; height: 18px; }
+        .summary-text { font-size: 1.1rem; color: #ccc; }
+        .total-amount { font-size: 2rem; font-weight: 800; color: white; display: block; margin-top: 5px; }
+        
+        .payment-methods { display: flex; gap: 20px; }
+        .radio-group { 
+            display: flex; align-items: center; gap: 10px; cursor: pointer; 
+            padding: 10px 20px; background: rgba(255,255,255,0.05); 
+            border-radius: 8px; border: 1px solid transparent; transition: 0.3s;
+        }
+        .radio-group:hover { border-color: rgba(255,255,255,0.3); }
+        .radio-group input { width: 18px; height: 18px; accent-color: var(--primary-color); }
 
         .btn-checkout {
-            padding: 12px 40px; background: var(--primary-color); color: black;
-            border: none; border-radius: 50px; font-weight: 700; font-size: 1.1rem;
-            cursor: pointer; transition: 0.3s; text-transform: uppercase;
+            padding: 15px 40px; background: linear-gradient(135deg, var(--primary-color), #0088cc);
+            color: black; border: none; border-radius: 8px; font-weight: 700; font-size: 1.1rem;
+            cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 5px 20px rgba(0, 210, 255, 0.3);
         }
-        .btn-checkout:hover { box-shadow: 0 0 20px var(--primary-color); transform: translateY(-3px); }
+        .btn-checkout:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0, 210, 255, 0.5); }
 
-        .empty-msg { text-align: center; color: #aaa; margin-top: 50px; font-size: 1.2rem; }
-        
-        @media (max-width: 768px) {
-            .sidebar { display: none; } 
-            .main { margin-left: 0 !important; width: 100% !important; padding: 1.5rem; }
+        /* --- EMPTY STATE --- */
+        .empty-state { text-align: center; padding: 50px 20px; color: #888; }
+        .empty-icon { font-size: 4rem; color: rgba(255,255,255,0.1); margin-bottom: 20px; }
+        .btn-browse { 
+            margin-top: 20px; display: inline-block; padding: 12px 30px; 
+            border: 1px solid var(--primary-color); color: var(--primary-color); 
+            text-decoration: none; border-radius: 50px; font-weight: 600; transition: 0.3s; 
+        }
+        .btn-browse:hover { background: var(--primary-color); color: black; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .sidebar { position: fixed; left: -100%; width: 280px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+            .sidebar.active { left: 0; transform: translateX(0); }
+            .mobile-header { display: flex; }
+            .close-sidebar-btn { display: block; }
+            
+            .main { width: 100%; margin-left: 0; padding: 1.5rem; padding-top: 90px; }
+            .cart-summary { flex-direction: column; align-items: stretch; text-align: center; }
+            .payment-methods { justify-content: center; }
+            .btn-checkout { width: 100%; }
+        }
+
+        @media (max-width: 480px) {
+            .cart-item { flex-direction: column; align-items: flex-start; }
+            .item-actions { width: 100%; justify-content: space-between; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+            .payment-methods { flex-direction: column; }
         }
     </style>
 </head>
@@ -85,51 +158,93 @@
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
 
-    <script src="/js/common.js"></script>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="mobile-logo">LAKSHYA 2K26</div>
+        <i class="fa-solid fa-bars menu-toggle" onclick="toggleSidebar()"></i>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            LAKSHYA 2K26 
+            <i class="fa-solid fa-xmark close-sidebar-btn" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="menu">
+            <li><a href="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+            <li><a href="events"><i class="fa-solid fa-calendar-days"></i> Events</a></li>
+            <li><a href="cart" class="active"><i class="fa-solid fa-cart-shopping"></i> My Cart</a></li>
+            <li><a href="my-registrations"><i class="fa-solid fa-clipboard-check"></i> Registrations</a></li>
+            <li><a href="certificates"><i class="fa-solid fa-certificate"></i> Certificates</a></li>
+            <li><a href="feedback"><i class="fa-solid fa-comment-dots"></i> Feedback</a></li>
+            <li><a onclick="logout()" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
     <main class="main">
         <div class="container">
-            <h2>Your Cart</h2>
+            <div class="page-header">
+                <h2><i class="fa-solid fa-cart-shopping"></i> Your Cart <span class="item-count" id="cartCount">0</span></h2>
+            </div>
             
             <div id="cartContainer" class="cart-list">
-                <!-- Items injected here -->
+                <div class="empty-state">
+                    <i class="fa-solid fa-cart-arrow-down empty-icon"></i>
+                    <h3>Your cart is waiting</h3>
+                    <p>Add events to get started with the fest!</p>
+                    <a href="events" class="btn-browse">Browse Events</a>
+                </div>
             </div>
 
             <div id="summarySection" class="cart-summary" style="display:none;">
-                <div class="total-row">Total: <span id="totalAmount">₹0</span></div>
-                
-                <div class="payment-options">
-                    <label class="radio-label">
-                        <input type="radio" name="payment" value="Online" checked> Pay Online
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="payment" value="Cash"> Pay Later (Cash)
-                    </label>
+                <div>
+                    <div class="summary-text">Total Amount Payable</div>
+                    <span class="total-amount" id="totalAmount">₹0</span>
                 </div>
-
-                <button class="btn-checkout" onclick="checkout()">Proceed to Checkout</button>
+                
+                <div style="flex-grow:1; display:flex; flex-direction:column; gap:15px; align-items:flex-end;">
+                    <div class="payment-methods">
+                        <label class="radio-group">
+                            <input type="radio" name="payment" value="Online" checked> 
+                            <span><i class="fa-solid fa-credit-card"></i> Online Payment</span>
+                        </label>
+                        <label class="radio-group">
+                            <input type="radio" name="payment" value="Cash"> 
+                            <span><i class="fa-solid fa-money-bill-wave"></i> Cash (On-Spot)</span>
+                        </label>
+                    </div>
+                    <button class="btn-checkout" onclick="checkout()">
+                        Proceed to Checkout <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </main>
 
-    <script>const CURRENT_PAGE = 'cart';</script>
-    
     <script>
         let cartItems = [];
         let eventsCache = {};
 
-        // 1. Init: Fetch from API instead of LocalStorage
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
         async function initCart() {
             try {
-                // A. Fetch Events (for titles/fees)
+                // 1. Fetch Events Details
                 const resEvents = await fetch('/api/events');
                 const allEvents = await resEvents.json();
                 allEvents.forEach(e => eventsCache[e.eventId] = e);
 
-                // B. Fetch Cart from DB
+                // 2. Fetch Cart Items
                 const resCart = await fetch('/api/cart');
                 if(!resCart.ok) throw new Error("Cart fetch failed");
                 cartItems = await resCart.json();
+
+                document.getElementById('cartCount').innerText = cartItems.length;
 
                 if (cartItems.length === 0) {
                     showEmpty();
@@ -138,7 +253,8 @@
                 }
             } catch (e) {
                 console.error(e);
-                document.getElementById('cartContainer').innerHTML = '<div class="empty-msg">Error loading cart. Please try again.</div>';
+                // Fallback to empty state on error
+                showEmpty();
             }
         }
 
@@ -153,45 +269,60 @@
 
                 total += parseInt(eventDetails.fee || 0);
 
-                // Build Team Info String
-                let teamInfo = '';
+                // Team Info Badge
+                let teamHtml = '';
                 if(item.teamName) {
-                    teamInfo = `<div style="margin-top:5px; font-size:0.85rem; color:#aaa;">
-                        <i class="fa-solid fa-users"></i> Team: <span style="color:white">${item.teamName}</span> 
-                        (${item.teamMembers.length + 1} members)
-                    </div>`;
+                    const memberCount = (item.teamMembers ? item.teamMembers.length : 0) + 1;
+                    teamHtml = `
+                        <div class="team-badge">
+                            <i class="fa-solid fa-users"></i> Team: <strong>${item.teamName}</strong> (${memberCount} Members)
+                        </div>
+                    `;
                 }
 
                 const div = document.createElement('div');
                 div.className = 'cart-item';
                 div.innerHTML = `
-                    <div class="item-info">
-                        <h3>${eventDetails.title}</h3>
-                        <p>Dept: <span style="color:var(--primary-color)">${item.dept}</span> | Type: ${eventDetails.type}</p>
-                        ${teamInfo}
+                    <div class="item-details">
+                        <div class="item-title">${eventDetails.title}</div>
+                        <div class="item-meta">
+                            <span><i class="fa-solid fa-layer-group"></i> ${eventDetails.type}</span>
+                            <span><i class="fa-solid fa-building-columns"></i> ${item.dept}</span>
+                        </div>
+                        ${teamHtml}
                     </div>
-                    <div style="display:flex; align-items:center;">
+                    <div class="item-actions">
                         <div class="item-price">₹${eventDetails.fee}</div>
-                        <i class="fa-solid fa-trash btn-remove" onclick="removeItem(${index})"></i>
+                        <div class="btn-remove" onclick="removeItem(${index})" title="Remove from Cart">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
                     </div>
                 `;
                 container.appendChild(div);
             });
 
             document.getElementById('totalAmount').innerText = '₹' + total;
-            document.getElementById('summarySection').style.display = 'block';
+            document.getElementById('summarySection').style.display = 'flex';
         }
 
         function showEmpty() {
-            document.getElementById('cartContainer').innerHTML = '<div class="empty-msg">Your cart is empty.<br><a href="events.html" style="color:var(--primary-color)">Browse Events</a></div>';
+            document.getElementById('cartContainer').innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-cart-plus empty-icon"></i>
+                    <h3>Your cart is currently empty</h3>
+                    <p>Explore events and register to participate!</p>
+                    <a href="events" class="btn-browse">Explore Events</a>
+                </div>
+            `;
             document.getElementById('summarySection').style.display = 'none';
         }
 
-        // 2. Remove: Update DB
         async function removeItem(index) {
-            cartItems.splice(index, 1); // Remove from array locally first
+            if(!confirm("Remove this event from cart?")) return;
+            
+            cartItems.splice(index, 1);
+            document.getElementById('cartCount').innerText = cartItems.length;
 
-            // Sync with DB
             try {
                 await fetch('/api/cart', {
                     method: 'POST',
@@ -206,51 +337,60 @@
             }
         }
 
-        // 3. Checkout: Send Team Details
         async function checkout() {
             const btn = document.querySelector('.btn-checkout');
             const paymentMode = document.querySelector('input[name="payment"]:checked').value;
             
-            if(confirm(`Confirm registration for ${cartItems.length} events?`)) {
-                btn.innerText = "Processing...";
-                btn.disabled = true;
+            if(!confirm(`Confirm registration for ${cartItems.length} events? \nMode: ${paymentMode}`)) return;
 
-                let successCount = 0;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
 
-                for (const item of cartItems) {
-                    try {
-                        const res = await fetch('/api/register-event', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                eventId: item.eventId,
-                                deptName: item.dept,
-                                paymentMode: paymentMode,
-                                // Pass the stored Team Data
-                                teamName: item.teamName,
-                                teamMembers: item.teamMembers 
-                            })
-                        });
-                        if(res.ok) successCount++;
-                    } catch(e) {
-                        console.error(e);
-                    }
+            let successCount = 0;
+
+            // Process one by one to ensure data integrity
+            for (const item of cartItems) {
+                try {
+                    const res = await fetch('/api/register-event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventId: item.eventId,
+                            deptName: item.dept,
+                            paymentMode: paymentMode,
+                            teamName: item.teamName,
+                            teamMembers: item.teamMembers 
+                        })
+                    });
+                    if(res.ok) successCount++;
+                } catch(e) {
+                    console.error("Registration failed for item", item, e);
                 }
+            }
 
+            if(successCount > 0) {
+                // Clear Cart
+                await fetch('/api/cart', { method: 'DELETE' });
+                
                 if(successCount === cartItems.length) {
-                    alert("Registration Successful!");
-                    // Clear DB Cart after success
-                    await fetch('/api/cart', { method: 'DELETE' });
-                    window.location.href = 'participant/my-registrations'; 
+                    alert("🎉 Registration Successful! Check your dashboard.");
                 } else {
-                    alert(`Registered ${successCount} out of ${cartItems.length} events.`);
-                    // Clear DB Cart anyway to avoid duplicates, or keep failed ones logic can be added here
-                    await fetch('/api/cart', { method: 'DELETE' }); 
-                    window.location.href = 'participant/my-registrations';
+                    alert(`⚠️ Completed ${successCount} out of ${cartItems.length} registrations.`);
                 }
+                window.location.href = 'my-registrations'; 
+            } else {
+                alert("❌ Registration Failed. Please try again.");
+                btn.innerHTML = 'Proceed to Checkout <i class="fa-solid fa-arrow-right"></i>';
+                btn.disabled = false;
             }
         }
 
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../login';
+        }
+
+        // Initialize
         initCart();
     </script>
 </body>
