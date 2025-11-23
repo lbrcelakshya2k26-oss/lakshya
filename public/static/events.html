@@ -102,12 +102,10 @@
             overflow: hidden;
             animation: fadeUp 0.8s ease-out forwards;
             opacity: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-
-        .event-card:nth-child(1) { animation-delay: 0.1s; }
-        .event-card:nth-child(2) { animation-delay: 0.2s; }
-        .event-card:nth-child(3) { animation-delay: 0.3s; }
-        .event-card:nth-child(4) { animation-delay: 0.4s; }
 
         .event-card:hover {
             transform: translateY(-10px);
@@ -116,6 +114,7 @@
             border-color: var(--primary-color);
         }
 
+        /* Icon Style */
         .event-icon {
             font-size: 3.5rem;
             color: var(--primary-color);
@@ -123,10 +122,25 @@
             transition: 0.4s;
         }
         
+        /* Image Style (Alternative to Icon) */
+        .event-img-display {
+            width: 80px; height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+            margin-bottom: 1rem;
+            transition: 0.4s;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+        }
+
         .event-card:hover .event-icon {
             transform: scale(1.1) rotate(5deg);
             color: white;
             text-shadow: 0 0 15px var(--primary-color);
+        }
+        .event-card:hover .event-img-display {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.6);
         }
 
         .event-title {
@@ -135,6 +149,7 @@
             font-weight: 700;
             margin-bottom: 0.5rem;
             color: white;
+            line-height: 1.3;
         }
 
         .event-subtitle {
@@ -150,13 +165,19 @@
             color: #ccc;
             margin-bottom: 1.5rem;
             line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .card-actions {
             display: flex;
             justify-content: center;
             gap: 10px;
-            flex-wrap: wrap; /* Allows buttons to stack on very small screens */
+            flex-wrap: wrap; 
+            margin-top: auto; /* Pushes buttons to bottom */
         }
 
         .btn-read-more {
@@ -210,7 +231,7 @@
             position: relative;
             box-shadow: 0 0 50px rgba(0, 210, 255, 0.2);
             animation: scaleUp 0.3s ease;
-            max-height: 80vh; /* Prevent overflow on small screens */
+            max-height: 80vh; 
             overflow-y: auto;
         }
 
@@ -220,6 +241,13 @@
             transition: 0.3s;
         }
         .close-btn:hover { color: var(--primary-color); }
+        
+        .modal-details-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;
+            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;
+        }
+        .modal-detail-item { font-size: 0.9rem; color: #ddd; }
+        .modal-detail-item i { color: var(--primary-color); margin-right: 8px; }
 
         /* --- ANIMATIONS --- */
         @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
@@ -228,20 +256,18 @@
 
         /* --- RESPONSIVE DESIGN --- */
         
-        /* Tablet (1024px and down) */
         @media (max-width: 1024px) {
             .section-title { font-size: 2.5rem; }
             nav { padding: 1.2rem 2rem; }
         }
 
-        /* Mobile (768px and down) */
         @media (max-width: 768px) {
             .menu-toggle { display: flex; }
             
             .nav-links {
                 position: absolute;
                 top: 0;
-                right: -100%; /* Hide off-screen by default */
+                right: -100%;
                 height: 100vh;
                 width: 70%;
                 background: var(--glass-bg);
@@ -254,16 +280,15 @@
                 display: flex;
             }
 
-            .nav-links.active { right: 0; } /* Slide in animation */
+            .nav-links.active { right: 0; }
 
             .events-container { padding: 100px 5% 50px 5%; }
             .section-title { font-size: 2.2rem; }
             
-            /* Adjust Modal for Mobile */
             .modal-content { padding: 1.5rem; width: 95%; }
+            .modal-details-grid { grid-template-columns: 1fr; }
         }
         
-        /* Small Mobile (480px and down) */
         @media (max-width: 480px) {
             .logo { font-size: 1.4rem; }
             .section-title { font-size: 1.8rem; }
@@ -282,14 +307,15 @@
         <div class="logo">LAKSHYA 2K26</div>
         
         <ul class="nav-links" id="navLinks">
-            <li><a href="home.html">Home</a></li>
-            <li><a href="brochure.html">Brochure</a></li>
-            <li><a href="events.html" style="color: var(--primary-color);">Events</a></li>
-            <li><a href="culturals.html">Culturals</a></li>
-            <li><a href="committee.html">Committee</a></li>
-            <li><a href="contact.html">Contact</a></li>
-            <li><a href="register.html" class="btn-register">Register</a></li>
-            <li><a href="login.html" class="btn-login">Login</a></li>
+            <li><a href="home">Home</a></li>
+            <li><a href="about">About Us</a></li>
+            <li><a href="brochure">Brochure</a></li>
+            <li><a href="events" style="color: var(--primary-color);">Events</a></li>
+            <li><a href="culturals">Culturals</a></li>
+            <li><a href="committee">Committee</a></li>
+            <li><a href="contact">Contact</a></li>
+            <li><a href="register" class="btn-register">Register</a></li>
+            <li><a href="login" class="btn-login">Login</a></li>
         </ul>
 
         <!-- Hamburger Icon -->
@@ -302,55 +328,13 @@
 
     <!-- EVENTS SECTION -->
     <div class="events-container">
-        <h1 class="section-title">MAJOR EVENTS</h1>
+        <h1 class="section-title">ALL EVENTS</h1>
 
-        <div class="events-grid">
-            <!-- CARD 1: SRUJANA -->
-            <div class="event-card">
-                <i class="fa-solid fa-scroll event-icon"></i>
-                <h3 class="event-title">SRUJANA</h3>
-                <p class="event-subtitle">PAPER PRESENTATION</p>
-                <p class="event-desc">Showcase your technical research and innovative ideas. Present your paper to a panel of experts.</p>
-                <div class="card-actions">
-                    <button class="btn-read-more" onclick="openModal('Srujana', 'Paper Presentation')">Read More</button>
-                    <a href="register.html" class="btn-card-register">Register</a>
-                </div>
-            </div>
-
-            <!-- CARD 2: MEDHA -->
-            <div class="event-card">
-                <i class="fa-solid fa-brain event-icon"></i>
-                <h3 class="event-title">MEDHA</h3>
-                <p class="event-subtitle">TECHNICAL QUIZ</p>
-                <p class="event-desc">Battle of wits! Test your technical knowledge and speed in this high-octane quiz competition.</p>
-                <div class="card-actions">
-                    <button class="btn-read-more" onclick="openModal('Medha', 'Technical Quiz')">Read More</button>
-                    <a href="register.html" class="btn-card-register">Register</a>
-                </div>
-            </div>
-
-            <!-- CARD 3: UDHBHAVANA -->
-            <div class="event-card">
-                <i class="fa-solid fa-lightbulb event-icon"></i>
-                <h3 class="event-title">UDHBHAVANA</h3>
-                <p class="event-subtitle">IDEATHON</p>
-                <p class="event-desc">Have a solution for a real-world problem? Pitch your idea and turn it into reality.</p>
-                <div class="card-actions">
-                    <button class="btn-read-more" onclick="openModal('Udhbhavana', 'Ideathon')">Read More</button>
-                    <a href="register.html" class="btn-card-register">Register</a>
-                </div>
-            </div>
-
-            <!-- CARD 4: PRAGNA -->
-            <div class="event-card">
-                <i class="fa-solid fa-image event-icon"></i>
-                <h3 class="event-title">PRAGNA</h3>
-                <p class="event-subtitle">POSTER PRESENTATION</p>
-                <p class="event-desc">Visualize your concepts. Design a poster that speaks louder than words about your topic.</p>
-                <div class="card-actions">
-                    <button class="btn-read-more" onclick="openModal('Pragna', 'Poster Presentation')">Read More</button>
-                    <a href="register.html" class="btn-card-register">Register</a>
-                </div>
+        <div class="events-grid" id="eventsGrid">
+            <!-- Loading State -->
+            <div style="grid-column: 1/-1; text-align: center; color: #aaa;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem;"></i><br><br>
+                Loading Events...
             </div>
         </div>
     </div>
@@ -361,34 +345,119 @@
             <span class="close-btn" onclick="closeModal()">&times;</span>
             <h2 id="modalTitle" style="color: var(--primary-color); margin-bottom: 5px;">Event Name</h2>
             <h4 id="modalSubtitle" style="color: #aaa; margin-bottom: 15px;">Subtitle</h4>
-            <p style="color: #ddd; line-height: 1.6;">
-                This is a detailed description of the event. Here you can explain the rules, team size, time limits, and judging criteria. 
-                <br><br>
-                <b>Rules:</b><br>
-                • Max Team Size: 2<br>
-                • Time Limit: 10 Mins<br>
-                • Decision of judges is final.
-            </p>
-            <br>
-            <a href="register.html" class="btn-card-register" style="display: inline-block; width: 100%; text-align: center;">Register Now</a>
+            
+            <!-- Quick Stats -->
+            <div class="modal-details-grid">
+                <div class="modal-detail-item"><i class="fa-solid fa-tag"></i> Fee: ₹<span id="modalFee">0</span></div>
+                <div class="modal-detail-item"><i class="fa-solid fa-users"></i> Team Size: <span id="modalTeam">1</span></div>
+                <div class="modal-detail-item"><i class="fa-solid fa-folder"></i> Category: <span id="modalCategory">General</span></div>
+            </div>
+
+            <div id="modalDescription" style="color: #ddd; line-height: 1.6; margin-bottom: 20px;">
+                <!-- Description injected here -->
+            </div>
+            
+            <a href="register" class="btn-card-register" style="display: inline-block; width: 100%; text-align: center; padding: 15px; font-size: 1.1rem;">Register Now</a>
         </div>
     </div>
 
     <script>
-        // Responsive Menu Toggle Logic
+        // Responsive Menu Toggle
         function toggleMenu() {
             const nav = document.getElementById('navLinks');
             nav.classList.toggle('active');
         }
         
-        // Modal Logic
-        const modal = document.getElementById('eventModal');
-        const mTitle = document.getElementById('modalTitle');
-        const mSub = document.getElementById('modalSubtitle');
+        // --- FETCH EVENTS LOGIC ---
+        let allEvents = [];
 
-        function openModal(title, subtitle) {
-            mTitle.innerText = title;
-            mSub.innerText = subtitle;
+        async function fetchEvents() {
+            try {
+                const response = await fetch('/api/events');
+                if (!response.ok) throw new Error("Failed to fetch");
+                allEvents = await response.json();
+                renderEvents(allEvents);
+            } catch (error) {
+                console.error("Error loading events:", error);
+                document.getElementById('eventsGrid').innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; color: #ff4444;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem;"></i><br><br>
+                        Failed to load events. Please try again later.
+                    </div>
+                `;
+            }
+        }
+
+        function renderEvents(events) {
+            const grid = document.getElementById('eventsGrid');
+            grid.innerHTML = '';
+
+            if (events.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center;">No events found.</div>';
+                return;
+            }
+
+            events.forEach((event, index) => {
+                const delay = (index % 5) * 0.1; // Stagger animation
+                
+                // Icon Selection Logic
+                let iconClass = 'fa-solid fa-calendar-star'; // Default
+                const type = event.type.toLowerCase();
+                const title = event.title.toLowerCase();
+
+                if (type.includes('technical') || title.includes('quiz') || title.includes('code')) iconClass = 'fa-solid fa-brain';
+                else if (type.includes('paper') || title.includes('presentation')) iconClass = 'fa-solid fa-scroll';
+                else if (type.includes('workshop')) iconClass = 'fa-solid fa-screwdriver-wrench';
+                else if (type.includes('cultural') || type.includes('music')) iconClass = 'fa-solid fa-music';
+                else if (type.includes('ideathon') || title.includes('idea')) iconClass = 'fa-solid fa-lightbulb';
+                else if (title.includes('poster')) iconClass = 'fa-solid fa-image';
+
+                // Image Handling: If URL is valid (not default), show Image. Else show Icon.
+                let visualElement = `<i class="${iconClass} event-icon"></i>`;
+                if (event.imageUrl && !event.imageUrl.includes('default')) {
+                    visualElement = `<img src="${event.imageUrl}" class="event-img-display" alt="Event Icon">`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                card.style.animationDelay = `${delay}s`;
+                card.innerHTML = `
+                    ${visualElement}
+                    <h3 class="event-title">${event.title}</h3>
+                    <p class="event-subtitle">${event.type}</p>
+                    <p class="event-desc">${event.description || 'Join us for this amazing event!'}</p>
+                    <div class="card-actions">
+                        <button class="btn-read-more" onclick="openEventModal('${event.eventId}')">Read More</button>
+                        <a href="register" class="btn-card-register">Register</a>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- MODAL LOGIC ---
+        const modal = document.getElementById('eventModal');
+
+        function openEventModal(eventId) {
+            const event = allEvents.find(e => e.eventId === eventId);
+            if (!event) return;
+
+            document.getElementById('modalTitle').innerText = event.title;
+            document.getElementById('modalSubtitle').innerText = event.type;
+            document.getElementById('modalFee').innerText = event.fee;
+            document.getElementById('modalTeam').innerText = event.teamSize || '1';
+            document.getElementById('modalCategory').innerText = event.type;
+            
+            // Build Description + Sections
+            let contentHtml = `<p>${event.description}</p>`;
+            
+            if (event.sections && event.sections.length > 0) {
+                event.sections.forEach(sec => {
+                    contentHtml += `<br><strong>${sec.heading}</strong><p>${sec.content}</p>`;
+                });
+            }
+
+            document.getElementById('modalDescription').innerHTML = contentHtml;
             modal.style.display = 'flex';
         }
 
@@ -396,12 +465,15 @@
             modal.style.display = 'none';
         }
 
-        // Close modal if clicked outside
+        // Close on outside click
         window.onclick = function(event) {
             if (event.target == modal) {
-                modal.style.display = "none";
+                closeModal();
             }
         }
+
+        // Initialize
+        fetchEvents();
     </script>
 
 </body>

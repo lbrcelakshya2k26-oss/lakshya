@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | LAKSHYA 2K26 – LBRCE</title>
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- GLOBAL VARIABLES (MATCHING HOME STYLE) --- */
+        :root {
+            --primary-color: #00d2ff;
+            --secondary-color: #3a7bd5;
+            --accent-color: #ff00cc;
+            --text-color: #ffffff;
+            --glass-bg: rgba(15, 15, 30, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --card-hover: rgba(0, 210, 255, 0.15);
+            --dark-overlay: linear-gradient(to bottom, rgba(5, 5, 15, 0.6), rgba(5, 5, 15, 0.95));
+            --mobile-glass: rgba(5, 5, 15, 0.92);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* --- BACKGROUND --- */
+        .bg-layer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: url('../assets/admin-block.jpg') no-repeat center top/cover;
+            z-index: -2;
+        }
+
+        .overlay-layer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--dark-overlay);
+            z-index: -1;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            padding: 1.2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(5, 5, 10, 0.6);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-color), #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+            transition: 0.4s;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--primary-color);
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .bar {
+            width: 30px;
+            height: 3px;
+            background: white;
+            border-radius: 3px;
+            transition: 0.4s;
+        }
+
+        .btn-login {
+            padding: 0.6rem 1.5rem;
+            border: 1px solid var(--primary-color);
+            border-radius: 50px;
+            color: var(--primary-color) !important;
+        }
+
+        .btn-register {
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+            border-radius: 50px;
+            color: white !important;
+        }
+
+        /* --- HEADER SECTION --- */
+        .page-header {
+            text-align: center;
+            padding-top: 150px;
+            padding-bottom: 40px;
+            animation: fadeDown 1s ease-out;
+        }
+
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            color: var(--primary-color);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        /* --- CONTAINER --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 80px 20px;
+        }
+
+        /* --- MAIN ABOUT GRID --- */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+            align-items: center;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            animation: fadeUp 0.8s ease-out forwards;
+        }
+
+        .glass-panel:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+        }
+
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: linear-gradient(to bottom, var(--primary-color), var(--accent-color));
+        }
+
+        .text-content h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 18px;
+            color: white;
+        }
+
+        .text-content p {
+            color: #ccc;
+            line-height: 1.7;
+            margin-bottom: 14px;
+            font-size: 0.98rem;
+            text-align: justify;
+        }
+
+        .tag-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(0, 210, 255, 0.08);
+            border: 1px solid rgba(0, 210, 255, 0.4);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+        }
+
+        .tag-pill i {
+            font-size: 0.85rem;
+            color: var(--primary-color);
+        }
+
+        /* --- IMAGE BOX --- */
+        .image-box {
+            width: 100%;
+            height: 350px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            animation: fadeUp 1s ease-out forwards;
+        }
+
+        .image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .image-box:hover img {
+            transform: scale(1.05);
+        }
+
+        .image-tag {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.6);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- STATS COUNTER --- */
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 70px 0 50px 0;
+            background: rgba(255,255,255,0.03);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .stat-item {
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .stat-number {
+            font-size: 2.6rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            font-family: 'Montserrat', sans-serif;
+            display: block;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        /* --- VISION & MISSION --- */
+        .vm-section-title {
+            text-align: center;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .vm-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 10px;
+        }
+
+        .vm-card {
+            background: rgba(10,10,20,0.75);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .vm-card:hover {
+            background: rgba(0, 210, 255, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .vm-icon {
+            font-size: 2.3rem;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+        }
+
+        .vm-title {
+            font-size: 1.35rem;
+            color: white;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .vm-card p {
+            color: #ccc;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* --- TRACKS / PILLARS --- */
+        .features-section {
+            margin-top: 80px;
+            text-align: center;
+        }
+
+        .features-section h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #fff, var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .features-section p {
+            color: #bbb;
+            font-size: 0.95rem;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            padding: 28px 22px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            transition: 0.3s;
+            text-align: left;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.25);
+        }
+
+        .feature-icon {
+            width: 54px;
+            height: 54px;
+            background: rgba(0, 210, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+        }
+
+        .feature-card h4 {
+            color: white;
+            margin-bottom: 6px;
+            font-size: 1.08rem;
+        }
+
+        .feature-tag {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            color: #a7a7a7;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            nav {
+                padding: 1.2rem 2rem;
+            }
+
+            .section-title {
+                font-size: 2.5rem;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .image-box {
+                height: 260px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                position: fixed;
+                top: 0; right: -100%;
+                height: 100vh;
+                width: 75%;
+                background: var(--mobile-glass);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 2rem;
+                border-left: 1px solid var(--glass-border);
+                transition: 0.4s;
+            }
+
+            .nav-links.active {
+                right: 0;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .vm-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                flex-direction: column;
+                gap: 30px;
+                align-items: center;
+            }
+
+            .page-header {
+                padding-top: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-layer"></div>
+    <div class="overlay-layer"></div>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="logo" onclick="window.location.href='home'">LAKSHYA 2K26</div>
+
+        <ul class="nav-links" id="navLinks">
+             <li><a href="home">Home</a></li>
+            <li><a href="about" style="color: var(--primary-color);">About Us</a></li>
+            <li><a href="brochure">Brochure</a></li>
+            <li><a href="events" >Events</a></li>
+            <li><a href="culturals">Culturals</a></li>
+            <li><a href="committee">Committee</a></li>
+            <li><a href="contact">Contact</a></li>
+            <li><a href="register" class="btn-register">Register</a></li>
+            <li><a href="login" class="btn-login">Login</a></li>
+        </ul>
+
+        <div class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <h1 class="section-title">ABOUT LAKSHYA</h1>
+        <p class="section-subtitle">LBRCE’s National Level Techno–Cultural Fest</p>
+    </div>
+
+    <div class="container">
+
+        <!-- INTRO GRID -->
+        <div class="about-grid">
+            <div class="glass-panel text-content">
+                <div class="tag-pill">
+                    <i class="fa-solid fa-location-dot"></i>
+                    Lakireddy Bali Reddy College of Engineering, Mylavaram
+                </div>
+
+                <h3>The Spirit of LAKSHYA</h3>
+                <p>
+                    <strong>LAKSHYA 2K26</strong> is the flagship National Level Techno–Cultural Fest of
+                    <strong>LBRCE</strong>, curated to celebrate ideas, innovation, and imagination on one
+                    vibrant campus. It brings together brilliant minds from diverse branches and institutions
+                    to compete, collaborate, and create.
+                </p>
+                <p>
+                    From intense <strong>paper &amp; poster presentations</strong> and <strong>ideathons</strong>
+                    to high–energy <strong>quizzes, coding battles, workshops, and cultural showcases</strong>,
+                    LAKSHYA is designed as a complete experience – for learners, leaders, and performers alike.
+                </p>
+                <p>
+                    Every edition of LAKSHYA adds a new chapter to the college’s legacy. LAKSHYA 2K26 continues
+                    that journey with refreshed themes, industry–aligned problem statements, and a campus-wide
+                    carnival that keeps the energy high from the inaugural to the valedictory.
+                </p>
+            </div>
+
+            <div class="image-box">
+                <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=2070"
+                     alt="Lakshya Fest Crowd">
+                <div class="image-tag">Tech • Culture • Celebration</div>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-number" data-target="19">0</span>
+                <span class="stat-label">Years of Legacy</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" data-target="20">0</span>
+                <span class="stat-label">Technical Events</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" data-target="10">0</span>
+                <span class="stat-label">Cultural &amp; Fun Events</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" data-target="3000">0</span>
+                <span class="stat-label">Participants Expected</span>
+            </div>
+        </div>
+
+        <!-- VISION & MISSION -->
+        <div class="vm-section-title">What Drives LAKSHYA</div>
+        <div class="vm-grid">
+            <div class="vm-card">
+                <i class="fa-solid fa-eye vm-icon"></i>
+                <h3 class="vm-title">Our Vision</h3>
+                <p>
+                    To make LAKSHYA a nationally recognized platform where students translate classroom learning
+                    into real–world innovation, cultivate leadership, and build confidence to solve tomorrow’s problems.
+                </p>
+            </div>
+            <div class="vm-card">
+                <i class="fa-solid fa-bullseye vm-icon"></i>
+                <h3 class="vm-title">Our Mission</h3>
+                <p>
+                    To host inclusive, high–impact technical and cultural events that nurture curiosity, collaboration,
+                    and competitive spirit while reflecting the ethos and excellence of LBRCE.
+                </p>
+            </div>
+        </div>
+
+        <!-- TRACKS / PILLARS -->
+        <div class="features-section">
+            <h2>FEST PILLARS</h2>
+            <p>
+                LAKSHYA 2K26 is thoughtfully structured into multiple tracks so that every kind of talent – analytical,
+                creative, technical, or artistic – finds the perfect stage to shine.
+            </p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <div class="feature-tag">Technical Arena</div>
+                    <h4>Paper &amp; Poster Presentations</h4>
+                    <p>
+                        Showcase cutting–edge research, innovative prototypes, and problem–solving approaches
+                        evaluated by academia and industry experts.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+                    <div class="feature-tag">Innovation Hub</div>
+                    <h4>Ideathons &amp; Problem Statements</h4>
+                    <p>
+                        Tackle real–time challenges, pitch bold ideas, and build solutions that could scale
+                        from campus projects to impactful products.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <div class="feature-tag">Mind Sports</div>
+                    <h4>Quizzes &amp; Brain Battles</h4>
+                    <p>
+                        High–intensity quiz rounds across technology, aptitude, current affairs, and pop culture –
+                        perfect for those who love strategy and speed.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-code"></i>
+                    </div>
+                    <div class="feature-tag">Coding Zone</div>
+                    <h4>Hackathons &amp; Code Wars</h4>
+                    <p>
+                        Test your logic, speed, and debugging skills in competitive programming arenas and
+                        project–based hackathons.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-music"></i>
+                    </div>
+                    <div class="feature-tag">Cultural Stage</div>
+                    <h4>Performances &amp; Pro–Shows</h4>
+                    <p>
+                        From classical to contemporary, solo to group, LAKSHYA’s cultural nights bring the entire campus
+                        together in rhythm and colour.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-mug-hot"></i>
+                    </div>
+                    <div class="feature-tag">Carnival Vibes</div>
+                    <h4>Stalls, Games &amp; More</h4>
+                    <p>
+                        Food stalls, fun games, photo spots, and chill zones ensure that participants enjoy every
+                        minute they spend at LBRCE during LAKSHYA.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Menu Toggle
+        const nav = document.getElementById('navLinks');
+        const menuToggle = document.getElementById('mobile-menu');
+
+        function toggleMenu() {
+            nav.classList.toggle('active');
+            menuToggle.classList.toggle('is-active');
+        }
+
+        function closeMenu() {
+            nav.classList.remove('active');
+            menuToggle.classList.remove('is-active');
+        }
+
+        // Stats Counter Animation
+        const counters = document.querySelectorAll('.stat-number');
+        const speed = 200;
+
+        const animateCounters = () => {
+            counters.forEach(counter => {
+                const updateCount = () => {
+                    const target = +counter.getAttribute('data-target');
+                    const count = +counter.innerText;
+                    const inc = target / speed;
+
+                    if (count < target) {
+                        counter.innerText = Math.ceil(count + inc);
+                        setTimeout(updateCount, 20);
+                    } else {
+                        counter.innerText = target + "+";
+                    }
+                };
+                updateCount();
+            });
+        };
+
+        // Trigger animation when stats section is in view
+        let animated = false;
+        window.addEventListener('scroll', () => {
+            const statsSection = document.querySelector('.stats-row');
+            const position = statsSection.getBoundingClientRect().top;
+            const screenPosition = window.innerHeight / 1.3;
+
+            if (position < screenPosition && !animated) {
+                animateCounters();
+                animated = true;
+            }
+        });
+    </script>
+</body>
+</html>

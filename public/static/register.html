@@ -223,17 +223,18 @@
 
     <!-- NAVIGATION -->
     <nav>
-        <div class="logo" onclick="window.location.href='home.html'">LAKSHYA 2K26</div>
+        <div class="logo" onclick="window.location.href='home'">LAKSHYA 2K26</div>
         
         <ul class="nav-links" id="navLinks">
-            <li><a href="home.html" onclick="closeMenu()">Home</a></li>
-            <li><a href="brochure.html" onclick="closeMenu()">Brochure</a></li>
-            <li><a href="events.html" onclick="closeMenu()">Events</a></li>
-            <li><a href="culturals.html" onclick="closeMenu()">Culturals</a></li>
-            <li><a href="committee.html" onclick="closeMenu()">Committee</a></li>
-            <li><a href="contact.html" onclick="closeMenu()">Contact</a></li>
-            <li><a href="register.html" class="btn-register" onclick="closeMenu()">Register</a></li>
-            <li><a href="login.html" class="btn-login" onclick="closeMenu()">Login</a></li>
+            <li><a href="home" onclick="closeMenu()">Home</a></li>
+            <li><a href="about">About Us</a></li>
+            <li><a href="brochure" onclick="closeMenu()">Brochure</a></li>
+            <li><a href="events" onclick="closeMenu()">Events</a></li>
+            <li><a href="culturals" onclick="closeMenu()">Culturals</a></li>
+            <li><a href="committee" onclick="closeMenu()">Committee</a></li>
+            <li><a href="contact" onclick="closeMenu()">Contact</a></li>
+            <li><a href="register" class="btn-register" onclick="closeMenu()">Register</a></li>
+            <li><a href="login" class="btn-login" onclick="closeMenu()">Login</a></li>
         </ul>
 
         <div class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
@@ -326,7 +327,7 @@
             </form>
 
             <div class="login-link">
-                Already registered? <a href="login.html">Login Here</a>
+                Already registered? <a href="login">Login Here</a>
             </div>
         </div>
     </div>
@@ -433,7 +434,7 @@
 
                 if (response.ok) {
                     alert("Registration Successful! Redirecting to Login...");
-                    window.location.href = "login.html";
+                    window.location.href = "login";
                 } else {
                     alert("Registration Failed: " + result.error);
                     submitBtn.innerText = "Register Now";

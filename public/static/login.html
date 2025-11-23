@@ -34,7 +34,7 @@
             background: var(--dark-overlay); z-index: -1;
         }
 
-        /* --- NAVIGATION BAR (Updated) --- */
+        /* --- NAVIGATION BAR --- */
         nav {
             position: fixed;
             top: 0;
@@ -126,7 +126,7 @@
         /* --- LOGIN CONTAINER --- */
         .container {
             min-height: 100vh; display: flex; justify-content: center; align-items: center;
-            padding: 100px 20px 20px 20px; /* Added top padding for nav */
+            padding: 100px 20px 20px 20px;
         }
 
         .glass-card {
@@ -200,18 +200,29 @@
         .register-link { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; }
         .register-link a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
 
-        /* Modal (Forgot Password) */
+        /* Modal (Generic) */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8); z-index: 2000; justify-content: center; align-items: center;
+            background: rgba(0, 0, 0, 0.85); z-index: 2000; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
         }
         .modal-content {
-            background: #1a1a2e; padding: 2rem; border-radius: 15px; border: 1px solid var(--primary-color);
+            background: #1a1a2e; padding: 2rem; border-radius: 15px; border: 1px solid var(--glass-border);
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.2);
             width: 90%; max-width: 400px; text-align: center;
+            position: relative; animation: slideUp 0.3s ease-out;
         }
-        .close-modal { float: right; font-size: 1.5rem; cursor: pointer; color: #aaa; }
+        .close-modal { 
+            position: absolute; top: 10px; right: 15px;
+            font-size: 1.5rem; cursor: pointer; color: #aaa; transition: 0.3s;
+        }
+        .close-modal:hover { color: var(--primary-color); }
+
+        .reset-step { display: block; }
+        .hidden { display: none; }
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- RESPONSIVE --- */
         @media (max-width: 1024px) {
@@ -243,17 +254,18 @@
 
     <!-- NAVIGATION -->
     <nav>
-        <div class="logo" onclick="window.location.href='home.html'">LAKSHYA 2K26</div>
+        <div class="logo" onclick="window.location.href='home'">LAKSHYA 2K26</div>
         
         <ul class="nav-links" id="navLinks">
-            <li><a href="home.html" onclick="closeMenu()">Home</a></li>
-            <li><a href="brochure.html" onclick="closeMenu()">Brochure</a></li>
-            <li><a href="events.html" onclick="closeMenu()">Events</a></li>
-            <li><a href="culturals.html" onclick="closeMenu()">Culturals</a></li>
-            <li><a href="committee.html" onclick="closeMenu()">Committee</a></li>
-            <li><a href="contact.html" onclick="closeMenu()">Contact</a></li>
-            <li><a href="register.html" class="btn-register" onclick="closeMenu()">Register</a></li>
-            <li><a href="login.html" class="btn-login" onclick="closeMenu()">Login</a></li>
+            <li><a href="home" onclick="closeMenu()">Home</a></li>
+            <li><a href="about">About Us</a></li>
+            <li><a href="brochure" onclick="closeMenu()">Brochure</a></li>
+            <li><a href="events" onclick="closeMenu()">Events</a></li>
+            <li><a href="culturals" onclick="closeMenu()">Culturals</a></li>
+            <li><a href="committee" onclick="closeMenu()">Committee</a></li>
+            <li><a href="contact" onclick="closeMenu()">Contact</a></li>
+            <li><a href="register" class="btn-register" onclick="closeMenu()">Register</a></li>
+            <li><a href="login" class="btn-login" onclick="closeMenu()">Login</a></li>
         </ul>
 
         <div class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
@@ -287,26 +299,52 @@
                 </div>
 
                 <div class="forgot-pass" id="forgotLink">
-                    <a onclick="openModal()">Forgot Password?</a>
+                    <a onclick="openForgotPasswordModal()">Forgot Password?</a>
                 </div>
 
                 <button type="submit" class="btn-submit" id="loginBtn">Login</button>
             </form>
 
             <div class="register-link" id="regLink">
-                New here? <a href="register.html">Create an Account</a>
+                New here? <a href="register">Create an Account</a>
             </div>
         </div>
     </div>
 
-    <!-- FORGOT PASSWORD MODAL -->
+    <!-- 1. ALERT POPUP MODAL (Replaces default alert) -->
+    <div class="modal" id="alertModal" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 350px;">
+            <span class="close-modal" onclick="closePopup()">&times;</span>
+            <div style="margin-bottom: 1rem; font-size: 2rem; color: var(--primary-color);">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <h3 id="popupTitle" style="color:white; margin-bottom:0.5rem;">Notice</h3>
+            <p id="popupMessage" style="color:#ccc; font-size:0.95rem; margin-bottom:1.5rem; line-height: 1.5;">Message goes here</p>
+            <button class="btn-submit" onclick="closePopup()" style="width: auto; padding: 0.6rem 2rem;">OK</button>
+        </div>
+    </div>
+
+    <!-- 2. FORGOT PASSWORD MODAL (Multi-step) -->
     <div class="modal" id="forgotModal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <h3 style="color:white; margin-bottom:1rem;">Reset Password</h3>
-            <p style="color:#ccc; font-size:0.9rem; margin-bottom:1rem;">Enter your registered email to receive a reset link.</p>
-            <input type="email" placeholder="Enter your email" style="margin-bottom:1rem;">
-            <button class="btn-submit">Send Reset Link</button>
+            <span class="close-modal" onclick="closeForgotPasswordModal()">&times;</span>
+            
+            <!-- Step 1: Request OTP -->
+            <div id="step1" class="reset-step">
+                <h3 style="color:white; margin-bottom:1rem;">Reset Password</h3>
+                <p style="color:#ccc; font-size:0.9rem; margin-bottom:1rem;">Enter your registered email to receive an OTP.</p>
+                <input type="email" id="resetEmail" placeholder="Enter your email" style="margin-bottom:1rem;" required>
+                <button class="btn-submit" id="sendOtpBtn" onclick="sendResetOtp()">Send OTP</button>
+            </div>
+
+            <!-- Step 2: Verify & Reset -->
+            <div id="step2" class="reset-step hidden">
+                <h3 style="color:white; margin-bottom:1rem;">Set New Password</h3>
+                <p style="color:#ccc; font-size:0.9rem; margin-bottom:1rem;">Check your email for the OTP.</p>
+                <input type="text" id="resetOtp" placeholder="Enter 6-digit OTP" style="margin-bottom:1rem;" required>
+                <input type="password" id="newPassword" placeholder="New Password" style="margin-bottom:1rem;" required>
+                <button class="btn-submit" id="resetPassBtn" onclick="submitResetPassword()">Reset Password</button>
+            </div>
         </div>
     </div>
 
@@ -331,7 +369,18 @@
             }
         });
 
-        // Login Logic
+        // --- POPUP LOGIC ---
+        function showPopup(title, message) {
+            document.getElementById('popupTitle').innerText = title;
+            document.getElementById('popupMessage').innerText = message;
+            document.getElementById('alertModal').style.display = 'flex';
+        }
+
+        function closePopup() {
+            document.getElementById('alertModal').style.display = 'none';
+        }
+
+        // --- LOGIN LOGIC ---
         let currentRole = 'participant';
 
         function switchTab(role) {
@@ -362,8 +411,16 @@
             }
         }
 
-        function openModal() { document.getElementById('forgotModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('forgotModal').style.display = 'none'; }
+        function openForgotPasswordModal() { 
+            document.getElementById('forgotModal').style.display = 'flex'; 
+            // Reset modal state
+            document.getElementById('step1').classList.remove('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('resetEmail').value = '';
+            document.getElementById('resetOtp').value = '';
+            document.getElementById('newPassword').value = '';
+        }
+        function closeForgotPasswordModal() { document.getElementById('forgotModal').style.display = 'none'; }
 
         async function handleLogin() {
             const email = document.getElementById('emailInput').value;
@@ -387,14 +444,85 @@
                     else if (currentRole === 'coordinator') window.location.href = '../coordinator/dashboard';
                     else window.location.href = '../admin/dashboard';
                 } else {
-                    alert("Login Failed: " + result.error);
+                    showPopup("Login Failed", result.error);
                     btn.innerText = "Login";
                     btn.disabled = false;
                 }
             } catch (error) {
                 console.error("Error:", error);
-                alert("Server error. Please check your connection.");
+                showPopup("Connection Error", "Server error. Please check your connection.");
                 btn.innerText = "Login";
+                btn.disabled = false;
+            }
+        }
+
+        // --- FORGOT PASSWORD LOGIC ---
+
+        // Step 1: Send OTP
+        async function sendResetOtp() {
+            const email = document.getElementById('resetEmail').value;
+            const btn = document.getElementById('sendOtpBtn');
+
+            if(!email) { showPopup("Input Required", "Please enter your email"); return; }
+
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/auth/forgot-password-request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await res.json();
+                if(res.ok) {
+                    showPopup("OTP Sent", data.message);
+                    document.getElementById('step1').classList.add('hidden');
+                    document.getElementById('step2').classList.remove('hidden');
+                } else {
+                    showPopup("Error", data.error);
+                }
+            } catch(e) {
+                console.error(e);
+                showPopup("Error", "Failed to send OTP. Try again.");
+            } finally {
+                btn.innerText = "Send OTP";
+                btn.disabled = false;
+            }
+        }
+
+        // Step 2: Reset Password
+        async function submitResetPassword() {
+            const email = document.getElementById('resetEmail').value;
+            const otp = document.getElementById('resetOtp').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const btn = document.getElementById('resetPassBtn');
+
+            if(!otp || !newPassword) { showPopup("Input Required", "Please fill all fields"); return; }
+
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, newPassword })
+                });
+
+                const data = await res.json();
+                if(res.ok) {
+                    showPopup("Success", data.message);
+                    closeForgotPasswordModal();
+                } else {
+                    showPopup("Reset Failed", data.error);
+                }
+            } catch(e) {
+                console.error(e);
+                showPopup("Error", "Failed to reset password.");
+            } finally {
+                btn.innerText = "Reset Password";
                 btn.disabled = false;
             }
         }
