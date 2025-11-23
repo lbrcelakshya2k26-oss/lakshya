@@ -12,7 +12,10 @@ const { SESv2Client, SendEmailCommand } = require("@aws-sdk/client-sesv2");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, UpdateCommand, DeleteCommand, QueryCommand } = require("@aws-sdk/lib-dynamodb");
 
+
 // const Razorpay = require('razorpay'); // Payment Disabled for now
+const Razorpay = require('razorpay');
+const crypto = require('crypto'); // Built-in Node module for security
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
@@ -37,7 +40,15 @@ app.use(session({
     cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 }));
 
+// --- RAZORPAY SETUP ---
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Rj1XO8nMv3xR7J',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'XqfcDBCtT3RD570yw8fGT43u'
+});
+
 // --- 2. AWS SETUP (UPDATED WITH YOUR CREDENTIALS) ---
+
+
 
 // DynamoDB Setup
 const client = new DynamoDBClient({
@@ -117,15 +128,19 @@ const isAuthenticated = (role) => (req, res, next) => {
 
 // --- 4. ROUTES: PUBLIC PAGES ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public/static/home.html')));
-app.get('/home.html', (req, res) => res.sendFile(path.join(__dirname, 'public/static/home.html')));
+app.get('/home', (req, res) => res.sendFile(path.join(__dirname, 'public/static/home.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public/static/login.html')));
-app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'public/static/login.html')));
-app.get('/register.html', (req, res) => res.sendFile(path.join(__dirname, 'public/static/register.html')));
-app.get('/events.html', (req, res) => res.sendFile(path.join(__dirname, 'public/static/events.html')));
-app.get('/culturals.html', (req, res) => res.sendFile(path.join(__dirname, 'public/static/culturals.html')));
-app.get('/brochure.html', (req, res) => res.sendFile(path.join(__dirname, 'public/static/brochure.html')));
-app.get('/committee.html', (req, res) => res.sendFile(path.join(__dirname, 'public/static/committee.html')));
-app.get('/contact.html', (req, res) => res.sendFile(path.join(__dirname, 'public/static/contact.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public/static/login.html')));
+app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public/static/register.html')));
+app.get('/events', (req, res) => res.sendFile(path.join(__dirname, 'public/static/events.html')));
+app.get('/culturals', (req, res) => res.sendFile(path.join(__dirname, 'public/static/culturals.html')));
+app.get('/brochure', (req, res) => res.sendFile(path.join(__dirname, 'public/static/brochure.html')));
+app.get('/committee', (req, res) => res.sendFile(path.join(__dirname, 'public/static/committee.html')));
+app.get('/contact', (req, res) => res.sendFile(path.join(__dirname, 'public/static/contact.html')));
+app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'public/static/about.html')));
+
+app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public/static/terms&conditions.html')));
+
 
 
 // --- 5. ROUTES: PARTICIPANT (PROTECTED) ---
@@ -293,7 +308,8 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
     }
 
     const registrationId = uuidv4();
-    const paymentStatus = paymentMode === 'Online' ? 'PENDING' : 'PENDING_CASH';
+    // Logic: If Online, it's PENDING (waiting for gateway). If Cash/Later, it's PENDING.
+    const paymentStatus = 'PENDING'; 
 
     const params = {
         TableName: 'Lakshya_Registrations',
@@ -302,11 +318,10 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
             studentEmail: user.email,
             eventId,
             deptName,
-            // Save Team Details
             teamName: teamName || null, 
-            teamMembers: teamMembers || [], // Array of objects
+            teamMembers: teamMembers || [], 
             paymentStatus: paymentStatus,
-            paymentMode,
+            paymentMode, // Will store 'Cash' or 'Online'
             attendance: false,
             registeredAt: new Date().toISOString()
         }
@@ -319,7 +334,12 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
         const subject = `Registration Confirmed: ${eventTitle}`;
         const teamInfo = teamName ? `<p><strong>Team Name:</strong> ${teamName}</p>` : '';
         
-        // HTML Receipt with Event Name
+        // Determine what to show in email for status
+        // User requested: Just "Payment Pending", no specific "Cash" mentions in status
+        const displayStatus = paymentStatus === 'COMPLETED' ? 'Paid' : 'Payment Pending';
+        const statusColor = paymentStatus === 'COMPLETED' ? 'green' : 'orange';
+
+        // HTML Receipt
         const emailBody = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd;">
                 <h2 style="color: #00d2ff; text-align: center;">LAKSHYA 2K26</h2>
@@ -331,11 +351,10 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
                     <p><strong>Event:</strong> ${eventTitle}</p>
                     <p><strong>Department:</strong> ${deptName}</p>
                     ${teamInfo}
-                    <p><strong>Payment Mode:</strong> ${paymentMode}</p>
-                    <p><strong>Payment Status:</strong> <span style="color: ${paymentStatus === 'COMPLETED' ? 'green' : 'orange'}">${paymentStatus}</span></p>
+                    <p><strong>Payment Status:</strong> <span style="color: ${statusColor}">${displayStatus}</span></p>
                 </div>
 
-                <p>If you selected Cash Payment, please pay at the registration desk to confirm your slot.</p>
+                <p>You can view your registration status in your dashboard.</p>
                 <br>
                 <p>Best Regards,<br>Team LAKSHYA</p>
             </div>
@@ -344,13 +363,11 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
         // 1. Send to Team Leader (Current User)
         await sendEmail(user.email, subject, emailBody);
 
-        // 2. Send to Team Members (If any)
+        // 2. Send to Team Members
         if (teamMembers && Array.isArray(teamMembers) && teamMembers.length > 0) {
-            // Using Promise.all to send in parallel without blocking response too much
             const memberEmails = teamMembers
-                .filter(m => m.email) // Ensure email exists
+                .filter(m => m.email)
                 .map(m => sendEmail(m.email, subject, emailBody));
-            
             await Promise.all(memberEmails);
         }
 
@@ -360,14 +377,27 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
         res.status(500).json({ error: 'Registration failed' });
     }
 });
-app.post('/api/payment/create-order', async (req, res) => {
-    const { amount } = req.body;
-    res.json({
-        id: "order_mock_" + uuidv4(),
-        amount: amount * 100,
+app.post('/api/payment/create-order', isAuthenticated('participant'), async (req, res) => {
+    const { amount } = req.body; // Amount in Rupees
+
+    const options = {
+        amount: amount * 100, // Razorpay requires amount in paise (1 INR = 100 paise)
         currency: "INR",
-        receipt: uuidv4()
-    });
+        receipt: "receipt_" + uuidv4().substring(0, 10),
+    };
+
+    try {
+        const order = await razorpay.orders.create(options);
+        res.json({
+            id: order.id,          // Real Razorpay Order ID
+            amount: order.amount,
+            currency: order.currency,
+            key_id: process.env.RAZORPAY_KEY_ID // Send Key ID to frontend for the popup
+        });
+    } catch (err) {
+        console.error("Razorpay Order Creation Failed:", err);
+        res.status(500).json({ error: "Could not create payment order" });
+    }
 });
 app.get('/api/participant/dashboard-stats', isAuthenticated('participant'), async (req, res) => {
     const userEmail = req.session.user.email;
@@ -417,25 +447,77 @@ app.get('/api/participant/dashboard-stats', isAuthenticated('participant'), asyn
     }
 });
 
-app.post('/api/payment/verify', async (req, res) => {
-    const { registrationId, paymentId } = req.body;
-    const params = {
-        TableName: 'Lakshya_Registrations',
-        Key: { registrationId },
-        UpdateExpression: "set paymentStatus = :s, paymentId = :p",
-        ExpressionAttributeValues: {
-            ":s": "COMPLETED",
-            ":p": paymentId || "mock_payment_id"
+app.post('/api/payment/verify', isAuthenticated('participant'), async (req, res) => {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, registrationIds } = req.body;
+    const userEmail = req.session.user.email; 
+
+    // A. Security: Verify Digital Signature
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    
+    // FIX: Use the fallback secret if process.env is missing
+    const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'XqfcDBCtT3RD570yw8fGT43u')
+        .update(body.toString())
+        .digest('hex');
+
+    // B. Check if Signature Matches
+    if (expectedSignature === razorpay_signature) {
+        try {
+            // C. Database Update: Mark all registrations as COMPLETED
+            if (registrationIds && Array.isArray(registrationIds) && registrationIds.length > 0) {
+                
+                // Update each registration in DynamoDB
+                const updatePromises = registrationIds.map(regId => 
+                    docClient.send(new UpdateCommand({
+                        TableName: 'Lakshya_Registrations',
+                        Key: { registrationId: regId },
+                        UpdateExpression: "set paymentStatus = :s, paymentId = :p, paymentMode = :m, attendance = :a",
+                        ExpressionAttributeValues: {
+                            ":s": "COMPLETED",
+                            ":p": razorpay_payment_id,
+                            ":m": "ONLINE",
+                            ":a": false 
+                        }
+                    }))
+                );
+
+                await Promise.all(updatePromises);
+
+                // D. Send Confirmation Email
+                const subject = `Payment Receipt - Transaction ID: ${razorpay_payment_id}`;
+                const htmlContent = `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                        <div style="background-color: #00d2ff; padding: 20px; text-align: center;">
+                            <h2 style="color: #ffffff; margin: 0;">Payment Successful!</h2>
+                        </div>
+                        <div style="padding: 30px; background-color: #ffffff;">
+                            <p style="font-size: 16px; color: #333;">Dear Participant,</p>
+                            <p style="color: #555; line-height: 1.6;">
+                                We have successfully received your payment for <strong>LAKSHYA 2K26</strong>. 
+                                Transaction ID: <strong>${razorpay_payment_id}</strong>
+                            </p>
+                            <p style="color: #777; font-size: 14px;">
+                                You can view your registration details in your dashboard.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                // Send email (ignoring errors to prevent blocking response)
+                sendEmail(userEmail, subject, htmlContent).catch(console.error);
+            }
+
+            res.json({ status: 'success', message: 'Payment Verified & Email Sent' });
+
+        } catch (err) {
+            console.error("Database/Email Error:", err);
+            res.status(500).json({ error: 'Payment verified but system update failed.' });
         }
-    };
-    try {
-        await docClient.send(new UpdateCommand(params));
-        res.json({ status: 'success' });
-    } catch (err) {
-        res.status(500).json({ error: 'Verification failed' });
+    } else {
+        console.warn(`Invalid Signature detected for Order ${razorpay_order_id}`);
+        res.status(400).json({ error: 'Invalid payment signature' });
     }
 });
-
 // --- 10. COORDINATOR ROUTES ---
 app.post('/api/coordinator/mark-attendance', isAuthenticated('coordinator'), async (req, res) => {
     const { registrationId, status } = req.body;
@@ -1497,6 +1579,90 @@ app.post('/api/admin/delete-committee-member', isAuthenticated('admin'), async (
         res.json({ message: 'Member deleted' });
     } catch (err) {
         res.status(500).json({ error: 'Failed to delete' });
+    }
+});
+
+app.post('/api/auth/forgot-password-request', async (req, res) => {
+    const { email } = req.body;
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = Date.now() + 15 * 60 * 1000; // 15 mins expiry
+
+    try {
+        // Check if user exists first
+        const userCheck = await docClient.send(new GetCommand({
+            TableName: 'Lakshya_Users',
+            Key: { email }
+        }));
+
+        if (!userCheck.Item) {
+            return res.status(404).json({ error: 'Email not registered' });
+        }
+
+        // Save OTP to user record
+        const params = {
+            TableName: 'Lakshya_Users',
+            Key: { email },
+            UpdateExpression: "set resetOtp = :o, resetOtpExp = :e",
+            ExpressionAttributeValues: {
+                ":o": otp,
+                ":e": expiry
+            }
+        };
+
+        await docClient.send(new UpdateCommand(params));
+        
+        // Send Email
+        await sendEmail(email, "LAKSHYA 2K26 - Password Reset OTP", 
+            `<p>Your OTP to reset your password is: <strong>${otp}</strong></p><p>This OTP expires in 15 minutes.</p>`);
+
+        res.json({ message: 'OTP sent to your email' });
+
+    } catch (err) {
+        console.error("Forgot Pass Error:", err);
+        res.status(500).json({ error: 'Failed to process request' });
+    }
+});
+
+// 2. Reset Password (Verify OTP & Update)
+app.post('/api/auth/reset-password', async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+
+    try {
+        const data = await docClient.send(new GetCommand({
+            TableName: 'Lakshya_Users',
+            Key: { email }
+        }));
+        
+        const user = data.Item;
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        // Validate OTP
+        if (!user.resetOtp || user.resetOtp !== otp) {
+            return res.status(400).json({ error: 'Invalid OTP' });
+        }
+        if (Date.now() > user.resetOtpExp) {
+            return res.status(400).json({ error: 'OTP expired' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update password and clear OTP
+        const updateParams = {
+            TableName: 'Lakshya_Users',
+            Key: { email },
+            UpdateExpression: "set password = :p remove resetOtp, resetOtpExp",
+            ExpressionAttributeValues: {
+                ":p": hashedPassword
+            }
+        };
+
+        await docClient.send(new UpdateCommand(updateParams));
+        res.json({ message: 'Password reset successfully. You can now login.' });
+
+    } catch (err) {
+        console.error("Reset Pass Error:", err);
+        res.status(500).json({ error: 'Failed to reset password' });
     }
 });
 const PORT = process.env.PORT || 3000;
