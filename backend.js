@@ -7,7 +7,6 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 require('dotenv').config();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
 const { SESv2Client, SendEmailCommand } = require("@aws-sdk/client-sesv2");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, UpdateCommand, DeleteCommand, QueryCommand } = require("@aws-sdk/lib-dynamodb");
@@ -270,33 +269,49 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
 // --- 9. API ROUTES: MOCKED PAYMENT & REGISTRATION ---
 app.post('/api/register-event', isAuthenticated('participant'), async (req, res) => {
-    // UPDATED: Now accepts teamName and teamMembers
-    const { eventId, deptName, paymentMode, teamName, teamMembers } = req.body;
+    const { eventId, deptName, paymentMode, teamName, teamMembers, submissionTitle, submissionAbstract, submissionUrl } = req.body;
     const user = req.session.user;
 
-    // 1. DUPLICATE REGISTRATION CHECK
+    // --- NEW CHECK: IS REGISTRATION OPEN FOR THIS DEPT? ---
+    try {
+        const statusId = `${eventId}#${deptName}`;
+        const statusRes = await docClient.send(new GetCommand({
+            TableName: 'Lakshya_EventStatus', // New Table
+            Key: { statusId }
+        }));
+        
+        // If a record exists and isOpen is false, block registration
+        if (statusRes.Item && statusRes.Item.isOpen === false) {
+            return res.status(403).json({ error: `Registrations for this event are currently closed by the ${deptName} department.` });
+        }
+    } catch (e) {
+        console.warn("Status check skipped or failed", e);
+    }
+    // ------------------------------------------------------
+
     try {
         const checkParams = {
             TableName: 'Lakshya_Registrations',
             IndexName: 'StudentIndex',
             KeyConditionExpression: 'studentEmail = :email',
-            FilterExpression: 'eventId = :eid',
+            FilterExpression: 'eventId = :eid AND deptName = :dept',
             ExpressionAttributeValues: {
                 ':email': user.email,
-                ':eid': eventId
+                ':eid': eventId,
+                ':dept': deptName
             }
         };
         const existing = await docClient.send(new QueryCommand(checkParams));
+        
         if (existing.Items && existing.Items.length > 0) {
-            return res.status(400).json({ error: 'You are already registered for this event.' });
+            return res.status(400).json({ error: `You are already registered for this event in the ${deptName} department.` });
         }
     } catch (e) {
         console.error("Duplicate Check Error", e);
         return res.status(500).json({ error: 'Server validation failed' });
     }
 
-    // 2. FETCH EVENT TITLE (For Email)
-    let eventTitle = eventId; // Default fallback
+    let eventTitle = eventId; 
     try {
         const eventRes = await docClient.send(new GetCommand({
             TableName: 'Lakshya_Events',
@@ -308,7 +323,6 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
     }
 
     const registrationId = uuidv4();
-    // Logic: If Online, it's PENDING (waiting for gateway). If Cash/Later, it's PENDING.
     const paymentStatus = 'PENDING'; 
 
     const params = {
@@ -319,9 +333,12 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
             eventId,
             deptName,
             teamName: teamName || null, 
-            teamMembers: teamMembers || [], 
+            teamMembers: teamMembers || [],
+            submissionTitle: submissionTitle || null,
+            submissionAbstract: submissionAbstract || null,
+            submissionUrl: submissionUrl || null,
             paymentStatus: paymentStatus,
-            paymentMode, // Will store 'Cash' or 'Online'
+            paymentMode, 
             attendance: false,
             registeredAt: new Date().toISOString()
         }
@@ -330,44 +347,36 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
     try {
         await docClient.send(new PutCommand(params));
 
-        // --- EMAIL NOTIFICATION LOGIC ---
         const subject = `Registration Confirmed: ${eventTitle}`;
         const teamInfo = teamName ? `<p><strong>Team Name:</strong> ${teamName}</p>` : '';
-        
-        // Determine what to show in email for status
-        // User requested: Just "Payment Pending", no specific "Cash" mentions in status
+        let submissionInfo = '';
+        if(submissionTitle) submissionInfo += `<p><strong>Submission:</strong> ${submissionTitle}</p>`;
+        if(submissionUrl) submissionInfo += `<p><strong>File:</strong> <a href="${submissionUrl}">View Upload</a></p>`;
+
         const displayStatus = paymentStatus === 'COMPLETED' ? 'Paid' : 'Payment Pending';
         const statusColor = paymentStatus === 'COMPLETED' ? 'green' : 'orange';
 
-        // HTML Receipt
         const emailBody = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd;">
                 <h2 style="color: #00d2ff; text-align: center;">LAKSHYA 2K26</h2>
                 <p>Dear Participant,</p>
                 <p>Thank you for registering for <strong>${eventTitle}</strong>. Below are your registration details:</p>
-                
                 <div style="background: #f9f9f9; padding: 15px; margin: 20px 0;">
                     <p><strong>Registration ID:</strong> ${registrationId}</p>
                     <p><strong>Event:</strong> ${eventTitle}</p>
                     <p><strong>Department:</strong> ${deptName}</p>
                     ${teamInfo}
+                    ${submissionInfo}
                     <p><strong>Payment Status:</strong> <span style="color: ${statusColor}">${displayStatus}</span></p>
                 </div>
-
-                <p>You can view your registration status in your dashboard.</p>
-                <br>
                 <p>Best Regards,<br>Team LAKSHYA</p>
             </div>
         `;
 
-        // 1. Send to Team Leader (Current User)
         await sendEmail(user.email, subject, emailBody);
 
-        // 2. Send to Team Members
         if (teamMembers && Array.isArray(teamMembers) && teamMembers.length > 0) {
-            const memberEmails = teamMembers
-                .filter(m => m.email)
-                .map(m => sendEmail(m.email, subject, emailBody));
+            const memberEmails = teamMembers.filter(m => m.email).map(m => sendEmail(m.email, subject, emailBody));
             await Promise.all(memberEmails);
         }
 
@@ -378,25 +387,65 @@ app.post('/api/register-event', isAuthenticated('participant'), async (req, res)
     }
 });
 app.post('/api/payment/create-order', isAuthenticated('participant'), async (req, res) => {
-    const { amount } = req.body; // Amount in Rupees
+    const { amount, couponCode } = req.body;
+    let finalAmount = amount;
+    let couponApplied = false;
+
+    // Validate & Calculate Discount
+    if (couponCode) {
+        try {
+            const couponRes = await docClient.send(new GetCommand({
+                TableName: 'Lakshya_Coupons',
+                Key: { code: couponCode.toUpperCase() }
+            }));
+
+            const coupon = couponRes.Item;
+
+            if (coupon && coupon.usedCount < coupon.usageLimit) {
+                const discount = (finalAmount * coupon.percentage) / 100;
+                finalAmount = Math.round(finalAmount - discount);
+                couponApplied = true;
+            } else {
+                console.warn(`Coupon ${couponCode} invalid or expired during order creation.`);
+            }
+        } catch (e) {
+            console.error("Coupon Error in Order:", e);
+        }
+    }
+
+    if (finalAmount < 1) finalAmount = 1;
 
     const options = {
-        amount: amount * 100, // Razorpay requires amount in paise (1 INR = 100 paise)
+        amount: finalAmount * 100,
         currency: "INR",
         receipt: "receipt_" + uuidv4().substring(0, 10),
     };
 
     try {
         const order = await razorpay.orders.create(options);
+
+        // IMPORTANT: Increment usage count ONLY if we successfully created an order with it
+        // Note: Strictly speaking, this should happen after successful payment verification to be 100% accurate,
+        // but incrementing here reserves it. For simple use cases, this is acceptable.
+        // To be atomic, you'd move this to the /verify endpoint, but then users might 'overuse' it simultaneously.
+        // Let's increment here for reservation logic.
+        if (couponApplied) {
+            await docClient.send(new UpdateCommand({
+                TableName: 'Lakshya_Coupons',
+                Key: { code: couponCode.toUpperCase() },
+                UpdateExpression: "set usedCount = usedCount + :inc",
+                ExpressionAttributeValues: { ":inc": 1 }
+            }));
+        }
+
         res.json({
-            id: order.id,          // Real Razorpay Order ID
+            id: order.id,
             amount: order.amount,
             currency: order.currency,
-            key_id: process.env.RAZORPAY_KEY_ID // Send Key ID to frontend for the popup
+            key_id: process.env.RAZORPAY_KEY_ID
         });
     } catch (err) {
-        console.error("Razorpay Order Creation Failed:", err);
-        res.status(500).json({ error: "Could not create payment order" });
+        res.status(500).json({ error: "Order creation failed" });
     }
 });
 app.get('/api/participant/dashboard-stats', isAuthenticated('participant'), async (req, res) => {
@@ -1665,11 +1714,217 @@ app.post('/api/auth/reset-password', async (req, res) => {
         res.status(500).json({ error: 'Failed to reset password' });
     }
 });
+
+app.get('/admin/coupons', isAuthenticated('admin'), (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/admin/coupons.html'));
+});
+
+// 2. Create Coupon API
+app.post('/api/admin/create-coupon', isAuthenticated('admin'), async (req, res) => {
+    const { code, percentage, limit } = req.body; // Added 'limit'
+    
+    if (!code || !percentage || !limit) return res.status(400).json({ error: 'Code, Percentage, and Usage Limit are required' });
+
+    const params = {
+        TableName: 'Lakshya_Coupons',
+        Item: {
+            code: code.toUpperCase(),
+            percentage: parseInt(percentage),
+            usageLimit: parseInt(limit), // Max allowed uses
+            usedCount: 0,                // Initial usage
+            createdAt: new Date().toISOString()
+        },
+        ConditionExpression: 'attribute_not_exists(code)'
+    };
+
+    try {
+        await docClient.send(new PutCommand(params));
+        res.json({ message: 'Coupon created successfully' });
+    } catch (err) {
+        if(err.name === 'ConditionalCheckFailedException') {
+            res.status(400).json({ error: 'Coupon code already exists' });
+        } else {
+            console.error("Create Coupon Error:", err);
+            res.status(500).json({ error: 'Failed to create coupon' });
+        }
+    }
+});
+
+// 3. Get All Coupons API
+app.get('/api/admin/coupons', isAuthenticated('admin'), async (req, res) => {
+    try {
+        const data = await docClient.send(new ScanCommand({ TableName: 'Lakshya_Coupons' }));
+        res.json(data.Items || []);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch coupons' });
+    }
+});
+
+// 4. Delete Coupon API
+app.post('/api/admin/delete-coupon', isAuthenticated('admin'), async (req, res) => {
+    try {
+        await docClient.send(new DeleteCommand({ TableName: 'Lakshya_Coupons', Key: { code: req.body.code } }));
+        res.json({ message: 'Deleted' });
+    } catch (err) { res.status(500).json({ error: 'Delete failed' }); }
+});
+
+
+app.post('/api/coupon/validate', isAuthenticated('participant'), async (req, res) => {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: "Code required" });
+
+    try {
+        const data = await docClient.send(new GetCommand({
+            TableName: 'Lakshya_Coupons',
+            Key: { code: code.toUpperCase() }
+        }));
+
+        if (!data.Item) return res.status(404).json({ error: "Invalid Coupon" });
+
+        const coupon = data.Item;
+
+        // Check Validity
+        if (coupon.usedCount >= coupon.usageLimit) {
+            return res.status(400).json({ error: "This coupon has expired (Usage limit reached)" });
+        }
+
+        res.json({ 
+            code: coupon.code, 
+            percentage: coupon.percentage,
+            message: `${coupon.percentage}% Discount Applied!`
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Validation failed" });
+    }
+});
+
+//---------------------------------------NEW PROCESS   ----------------------------//   
+
+// --- NEW HELPER: UPLOAD FILE & RETURN URL (For Cart/Academic Flow) ---
+app.post('/api/utility/upload-file', isAuthenticated('participant'), upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+        const user = req.session.user;
+        const fileExt = req.file.originalname.split('.').pop();
+        // Create a unique path in S3
+        const fileName = `temp_uploads/${user.email}_${uuidv4()}.${fileExt}`;
+
+        const uploadParams = {
+            Bucket: 'hirewithusjobapplications', // Your Bucket Name
+            Key: fileName,
+            Body: req.file.buffer,
+            ContentType: req.file.mimetype
+            // ACL: 'public-read' // Uncomment if your bucket allows ACLs
+        };
+
+        await s3Client.send(new PutObjectCommand(uploadParams));
+        
+        // Construct and return the URL
+        const fileUrl = `https://hirewithusjobapplications.s3.ap-south-1.amazonaws.com/${fileName}`;
+
+        res.json({ url: fileUrl });
+    } catch (e) {
+        console.error("Upload Helper Error:", e);
+        res.status(500).json({ error: 'Upload failed' });
+    }
+});
+
+app.get('/api/coordinator/submissions', isAuthenticated('coordinator'), async (req, res) => {
+    const userDept = req.session.user.dept;
+    if (!userDept) return res.status(400).json({ error: "No department assigned" });
+
+    try {
+        const params = {
+            TableName: 'Lakshya_Registrations',
+            IndexName: 'DepartmentIndex',
+            KeyConditionExpression: 'deptName = :dept',
+            ExpressionAttributeValues: { ':dept': userDept }
+        };
+
+        const data = await docClient.send(new QueryCommand(params));
+        // Filter in memory for records that actually have submissions
+        const withSubs = (data.Items || []).filter(r => r.submissionTitle || r.submissionUrl);
+        
+        res.json(withSubs);
+    } catch (err) {
+        console.error("Submissions Fetch Error", err);
+        res.status(500).json({ error: "Failed to fetch submissions" });
+    }
+});
+
+// B. Get Event Statuses (Open/Closed) for Coordinator's Dept
+app.get('/api/coordinator/event-controls', isAuthenticated('coordinator'), async (req, res) => {
+    const userDept = req.session.user.dept;
+    try {
+        // 1. Get All Events
+        const eventData = await docClient.send(new ScanCommand({ TableName: 'Lakshya_Events' }));
+        const allEvents = eventData.Items || [];
+
+        // 2. Filter for Dept
+        const myEvents = allEvents.filter(e => e.departments && e.departments.includes(userDept));
+
+        // 3. Get Status Overrides from Lakshya_EventStatus
+        // We scan because Query requires partition key, and we want all statuses for this dept
+        // Optimization: In production, query by GSI on 'deptName' if volume is high.
+        // For now, we fetch statuses one by one or scan table (Scan is okay for small table)
+        const statusData = await docClient.send(new ScanCommand({ TableName: 'Lakshya_EventStatus' }));
+        const statusMap = {};
+        (statusData.Items || []).forEach(s => {
+            if (s.deptName === userDept) statusMap[s.eventId] = s.isOpen;
+        });
+
+        // 4. Merge
+        const result = myEvents.map(e => ({
+            eventId: e.eventId,
+            title: e.title,
+            isOpen: statusMap[e.eventId] !== false // Default to true if no record exists
+        }));
+
+        res.json(result);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to load controls" });
+    }
+});
+
+// C. Toggle Event Status
+app.post('/api/coordinator/toggle-event', isAuthenticated('coordinator'), async (req, res) => {
+    const { eventId, isOpen } = req.body;
+    const userDept = req.session.user.dept;
+    const statusId = `${eventId}#${userDept}`;
+
+    const params = {
+        TableName: 'Lakshya_EventStatus',
+        Item: {
+            statusId,
+            eventId,
+            deptName: userDept,
+            isOpen, // boolean
+            updatedAt: new Date().toISOString()
+        }
+    };
+
+    try {
+        await docClient.send(new PutCommand(params));
+        res.json({ message: `Event ${isOpen ? 'Opened' : 'Closed'} successfully.` });
+    } catch (e) {
+        res.status(500).json({ error: "Update failed" });
+    }
+});
+
+// --- ROUTE HANDLERS FOR NEW HTML PAGES ---
+app.get('/coordinator/view-submissions', isAuthenticated('coordinator'), (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/coordinator/submissions.html'));
+});
+app.get('/coordinator/event-control', isAuthenticated('coordinator'), (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/coordinator/event-control.html'));
+});
 const PORT = process.env.PORT || 3000;
 
 if (require.main === module) {
     app.listen(PORT, () => {
-        console.log(`🚀 LAKSHYA 2K26 Server running on http://localhost:${PORT}`);
+        console.log(` LAKSHYA 2K26 Server running on http://localhost:${PORT}`);
     });
 }
 
