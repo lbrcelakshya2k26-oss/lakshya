@@ -6,126 +6,66 @@
     <title>My Registrations | LAKSHYA 2K26</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- 1. RAZORPAY SCRIPT ADDED HERE -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
-    <!-- 2. CONNECT COMMON JS -->
-    <script>const CURRENT_PAGE = 'my-registrations';</script>
-    <script src="/js/common.js"></script>
-
     <style>
         /* --- COSMIC THEME --- */
-        :root {
-            --primary-color: #00d2ff;
-            --secondary-color: #3a7bd5;
-            --accent-color: #ff00cc;
-            --glass-bg: rgba(20, 20, 35, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-color: #ffffff;
-            --sidebar-width: 260px;
-        }
+        :root { --primary-color: #00d2ff; --secondary-color: #3a7bd5; --accent-color: #ff00cc; --glass-bg: rgba(20, 20, 35, 0.85); --glass-border: rgba(255, 255, 255, 0.1); --text-color: #ffffff; --sidebar-width: 260px; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background-color: #0a0a0a; color: var(--text-color); display: flex; min-height: 100vh; overflow-x: hidden; }
-
-        /* Background */
         .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('../assets/admin-block.jpg') no-repeat center center/cover; z-index: -2; opacity: 0.6; }
         .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 12, 0.92); z-index: -1; }
-
-        /* --- MOBILE HEADER (Styles needed for common.js injection) --- */
-        .mobile-header {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 70px;
-            background: var(--glass-bg); border-bottom: 1px solid var(--glass-border);
-            z-index: 1100; align-items: center; justify-content: space-between; padding: 0 20px;
-            backdrop-filter: blur(10px);
-        }
+        
+        /* Mobile Header & Sidebar */
+        .mobile-header { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 70px; background: var(--glass-bg); border-bottom: 1px solid var(--glass-border); z-index: 1100; align-items: center; justify-content: space-between; padding: 0 20px; backdrop-filter: blur(10px); }
         .mobile-logo { font-family: 'Montserrat', sans-serif; font-weight: 900; color: white; font-size: 1.2rem; }
         .menu-toggle { font-size: 1.5rem; color: var(--primary-color); cursor: pointer; }
-        
-        /* --- SIDEBAR (Styles needed for common.js injection) --- */
-        .sidebar {
-            width: var(--sidebar-width); background: var(--glass-bg); border-right: 1px solid var(--glass-border);
-            backdrop-filter: blur(10px); padding: 2rem; display: flex; flex-direction: column;
-            position: fixed; height: 100vh; z-index: 1000; transition: transform 0.3s ease-in-out; left: 0; top: 0;
-        }
+        .sidebar { width: var(--sidebar-width); background: var(--glass-bg); border-right: 1px solid var(--glass-border); backdrop-filter: blur(10px); padding: 2rem; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 1000; transition: transform 0.3s ease-in-out; left: 0; top: 0; }
         .logo { font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 900; color: var(--primary-color); margin-bottom: 3rem; text-align: center; }
         .menu { list-style: none; flex-grow: 1; }
         .menu li { margin-bottom: 1rem; }
         .menu a { text-decoration: none; color: #ccc; display: flex; align-items: center; gap: 15px; padding: 12px 15px; border-radius: 8px; transition: 0.3s; font-weight: 500; }
         .menu a:hover, .menu a.active { background: rgba(0, 210, 255, 0.15); color: var(--primary-color); border: 1px solid rgba(0, 210, 255, 0.2); }
         .logout { color: #ff4444; cursor: pointer; margin-top: auto; }
-
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
         .sidebar-overlay.active { display: block; }
         .close-sidebar-btn { display: none; font-size: 1.2rem; color: white; cursor: pointer; }
-
-        /* --- MAIN CONTENT --- */
+        
         .main { flex-grow: 1; padding: 2.5rem; margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); overflow-y: auto; }
         .container { max-width: 1000px; margin: 0 auto; padding-bottom: 80px; }
-
         .page-header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
         .page-header h2 { font-family: 'Montserrat', sans-serif; font-size: 2rem; color: white; }
-
-        /* --- REGISTRATION CARDS --- */
-        .reg-list { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         
-        .reg-card {
-            background: rgba(30, 30, 40, 0.6); border: 1px solid var(--glass-border);
-            border-radius: 15px; padding: 1.5rem; display: flex; flex-wrap: wrap; 
-            align-items: center; justify-content: space-between; gap: 20px;
-            transition: 0.3s; position: relative; overflow: hidden;
-        }
+        .reg-list { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        .reg-card { background: rgba(30, 30, 40, 0.6); border: 1px solid var(--glass-border); border-radius: 15px; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; transition: 0.3s; position: relative; overflow: hidden; }
         .reg-card:hover { transform: translateY(-3px); border-color: var(--primary-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .reg-card::before { content:''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--primary-color); }
         .reg-card.pending::before { background: #ffc107; }
-
         .reg-details { flex: 1; min-width: 200px; }
         .reg-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; color: white; font-family: 'Montserrat'; }
         .reg-meta { color: #aaa; font-size: 0.9rem; display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 8px; }
-        .reg-meta span { display: flex; align-items: center; gap: 5px; }
-        .reg-meta i { color: var(--primary-color); }
-
-        .team-badge { 
-            background: rgba(255, 0, 204, 0.1); border: 1px dashed var(--accent-color); 
-            color: #ff88dd; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; 
-            display: inline-block; margin-top: 5px;
-        }
-
-        .status-badge {
-            padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;
-        }
+        .team-badge { background: rgba(255, 0, 204, 0.1); border: 1px dashed var(--accent-color); color: #ff88dd; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; display: inline-block; margin-top: 5px; }
+        .coupon-badge { background: rgba(0, 255, 136, 0.1); border: 1px dashed #00ff88; color: #00ff88; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; display: inline-block; margin-top: 5px; margin-left: 10px; }
+        .status-badge { padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
         .status-paid { background: rgba(76, 175, 80, 0.2); color: #4caf50; border: 1px solid rgba(76, 175, 80, 0.3); }
         .status-pending { background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3); }
-
         .reg-actions { display: flex; gap: 10px; }
-        
-        .btn-action {
-            padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; 
-            transition: 0.3s; font-size: 0.9rem; border: none; display: flex; align-items: center; gap: 8px;
-        }
+        .btn-action { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.9rem; border: none; display: flex; align-items: center; gap: 8px; }
         .btn-pay { background: #ffc107; color: black; }
         .btn-pay:hover { background: #ffdb4d; transform: translateY(-2px); }
-        
         .btn-receipt { background: rgba(0, 210, 255, 0.1); color: var(--primary-color); border: 1px solid var(--primary-color); }
-        .btn-receipt:hover { background: var(--primary-color); color: black; }
-
+        
         .empty-state { text-align: center; padding: 50px 20px; color: #888; }
-        .btn-browse { 
-            margin-top: 20px; display: inline-block; padding: 12px 30px; 
-            border: 1px solid var(--primary-color); color: var(--primary-color); 
-            text-decoration: none; border-radius: 50px; font-weight: 600; transition: 0.3s; 
-        }
+        .btn-browse { margin-top: 20px; display: inline-block; padding: 12px 30px; border: 1px solid var(--primary-color); color: var(--primary-color); text-decoration: none; border-radius: 50px; font-weight: 600; transition: 0.3s; }
         .btn-browse:hover { background: var(--primary-color); color: black; }
 
-        /* --- RESPONSIVE --- */
-        @media (max-width: 1024px) {
-            .sidebar { position: fixed; left: -100%; width: 280px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-            .sidebar.active { left: 0; transform: translateX(0); }
-            .mobile-header { display: flex; }
-            .close-sidebar-btn { display: block; }
-            
-            .main { width: 100%; margin-left: 0; padding: 1.5rem; padding-top: 90px; }
-        }
+        /* --- MODALS --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #1a1a2e; padding: 2rem; border-radius: 15px; border: 1px solid var(--glass-border); width: 90%; max-width: 400px; text-align: center; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+        @media (max-width: 1024px) {
+            .sidebar { left: -100%; } .sidebar.active { left: 0; } .mobile-header { display: flex; } .main { width: 100%; margin-left: 0; padding-top: 90px; }
+        }
         @media (max-width: 600px) {
             .reg-card { flex-direction: column; align-items: flex-start; }
             .reg-actions { width: 100%; justify-content: flex-end; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
@@ -134,19 +74,31 @@
     </style>
 </head>
 <body>
-
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
-
-    <!-- Common JS handles Sidebar injection -->
-
-    <!-- Main Content -->
+    <div class="mobile-header">
+        <div class="mobile-logo">LAKSHYA 2K26</div>
+        <i class="fa-solid fa-bars menu-toggle" onclick="toggleSidebar()"></i>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">LAKSHYA 2K26 <i class="fa-solid fa-xmark close-sidebar-btn" onclick="toggleSidebar()"></i></div>
+        <ul class="menu">
+            <li><a href="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+            <li><a href="events"><i class="fa-solid fa-calendar-days"></i> Events</a></li>
+            <li><a href="cart"><i class="fa-solid fa-cart-shopping"></i> My Cart</a></li>
+            <li><a href="my-registrations" class="active"><i class="fa-solid fa-clipboard-check"></i> Registrations</a></li>
+            <li><a href="certificates"><i class="fa-solid fa-certificate"></i> Certificates</a></li>
+            <li><a href="feedback"><i class="fa-solid fa-comment-dots"></i> Feedback</a></li>
+            <li><a onclick="logout()" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        </ul>
+    </aside>
+    
     <main class="main">
         <div class="container">
             <div class="page-header">
                 <h2>My Registrations</h2>
             </div>
-            
             <div id="regContainer" class="reg-list">
                 <div class="empty-state">
                     <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;"></i>
@@ -154,36 +106,63 @@
                 </div>
             </div>
         </div>
-        
         <div style="text-align:center; padding-top:40px;">
              <a href="/terms.html" target="_blank" style="color:#666; text-decoration:none; font-size:0.9rem;">Terms & Conditions</a>
         </div>
     </main>
 
+    <!-- PAYMENT MODAL WITH COUPON -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content" style="text-align:left; border:1px solid var(--primary-color);">
+            <h3 style="text-align:center; margin-bottom:20px; color:white; font-family:'Montserrat';">Complete Payment</h3>
+            
+            <div style="margin-bottom:15px;">
+                <label style="color:#aaa; font-size:0.9rem;">Event Fee</label>
+                <div style="font-size:1.2rem; color:white; font-weight:bold;" id="payOriginalAmount">₹0</div>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="color:#aaa; font-size:0.9rem;">Have a Coupon?</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="payCouponInput" placeholder="Enter Code" style="width:100%; padding:10px; background:rgba(255,255,255,0.1); border:1px solid #444; color:white; border-radius:5px; text-transform: uppercase;">
+                    <button onclick="validatePayCoupon()" id="btnApplyCoupon" style="padding:10px 20px; background:var(--primary-color); border:none; border-radius:5px; cursor:pointer; font-weight:bold; color:black;">Apply</button>
+                </div>
+                <div id="payCouponMsg" style="font-size:0.85rem; margin-top:5px; min-height:1.2em;"></div>
+            </div>
+
+            <div style="margin-bottom:25px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+                <span style="color:#ccc;">Total Payable</span>
+                <span style="font-size:1.6rem; color:#00ff88; font-weight:bold;" id="payFinalAmount">₹0</span>
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button onclick="closePaymentModal()" style="padding:12px 20px; background:transparent; border:1px solid #555; color:#ccc; border-radius:8px; cursor:pointer; flex:1;">Cancel</button>
+                <button onclick="processPayment()" id="btnFinalPay" style="padding:12px 20px; background:linear-gradient(45deg, #00d2ff, #007bff); border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold; flex:1;">Pay Now</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         let allRegistrations = [];
-        let eventCache = {}; // Changed from eventNames to eventCache to store full details (fee)
+        let eventCache = {};
         let currentUser = { name: 'Student', rollNo: '', email: '' };
+        
+        // State for current payment interaction
+        let pendingTx = { regId: null, amount: 0, coupon: null };
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
 
         async function init() {
             try {
-                // 1. Fetch Events (Store full object to access Fee)
                 const resEvents = await fetch('/api/events');
                 const events = await resEvents.json();
                 events.forEach(e => eventCache[e.eventId] = e);
-
-                // 2. Fetch User Profile
                 const resUser = await fetch('/api/participant/dashboard-stats');
                 if(resUser.ok) currentUser = await resUser.json();
-
-                // 3. Fetch Registrations
                 const resReg = await fetch('/api/participant/my-registrations-data');
                 if(resReg.redirected) { window.location.href = '../login'; return; }
-                
                 allRegistrations = await resReg.json();
                 renderRegistrations();
-
             } catch (e) {
                 console.error(e);
                 document.getElementById('regContainer').innerHTML = '<div class="empty-state" style="color:red;">Error loading data.</div>';
@@ -193,46 +172,33 @@
         function renderRegistrations() {
             const container = document.getElementById('regContainer');
             container.innerHTML = '';
-
             if (allRegistrations.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fa-solid fa-clipboard-list" style="font-size:4rem; opacity:0.2; margin-bottom:15px;"></i>
-                        <h3>No Registrations Yet</h3>
-                        <p>You haven't registered for any events.</p>
-                        <a href="events" class="btn-browse">Browse Events</a>
-                        
-                    </div>
-                    
-                `;
+                container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-clipboard-list" style="font-size:4rem; opacity:0.2; margin-bottom:15px;"></i><h3>No Registrations Yet</h3><p>You haven't registered for any events.</p><a href="events" class="btn-browse">Browse Events</a></div>`;
                 return;
             }
-
             allRegistrations.forEach(reg => {
-                // Use cache to get title and fee
                 const eventDetails = eventCache[reg.eventId] || { title: reg.eventId, fee: '0' };
-                
                 const isPaid = reg.paymentStatus === 'COMPLETED';
-                const statusBadge = isPaid 
-                    ? `<span class="status-badge status-paid"><i class="fa-solid fa-check"></i> Paid</span>`
-                    : `<span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> Pending</span>`;
-                
+                const statusBadge = isPaid ? `<span class="status-badge status-paid"><i class="fa-solid fa-check"></i> Paid</span>` : `<span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> Pending</span>`;
                 const cardClass = isPaid ? 'reg-card' : 'reg-card pending';
-
+                
                 let teamHtml = '';
                 if(reg.teamName) {
                     const count = (reg.teamMembers ? reg.teamMembers.length : 0) + 1;
                     teamHtml = `<div class="team-badge"><i class="fa-solid fa-users"></i> ${reg.teamName} (${count})</div>`;
                 }
 
+                let couponHtml = '';
+                if(reg.couponUsed && reg.couponUsed !== 'NONE' && reg.couponUsed !== null) {
+                    couponHtml = `<div class="coupon-badge"><i class="fa-solid fa-tag"></i> ${reg.couponUsed}</div>`;
+                }
+
                 let actionBtn = '';
                 if (isPaid) {
                     actionBtn = `<button class="btn-action btn-receipt" onclick="printReceipt('${reg.registrationId}')"><i class="fa-solid fa-print"></i> Receipt</button>`;
                 } else {
-                    // Pass regId AND the fee
-                    actionBtn = `<button class="btn-action btn-pay" id="pay-btn-${reg.registrationId}" onclick="payNow('${reg.registrationId}', ${eventDetails.fee || 0})">
-                        <i class="fa-solid fa-credit-card"></i> Pay Now
-                    </button>`;
+                    // CHANGED: Call openPaymentModal instead of paying directly
+                    actionBtn = `<button class="btn-action btn-pay" onclick="openPaymentModal('${reg.registrationId}', ${eventDetails.fee || 0})"><i class="fa-solid fa-credit-card"></i> Pay Now</button>`;
                 }
 
                 const div = document.createElement('div');
@@ -245,108 +211,161 @@
                             <span><i class="fa-solid fa-calendar"></i> ${new Date(reg.registeredAt).toLocaleDateString()}</span>
                             <span><i class="fa-solid fa-tag"></i> ₹${eventDetails.fee || 0}</span>
                         </div>
-                        ${teamHtml}
+                        ${teamHtml} ${couponHtml}
                     </div>
-                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
-                        ${statusBadge}
-                    </div>
-                    <div class="reg-actions">
-                        ${actionBtn}
-                    </div>
-                `;
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">${statusBadge}</div>
+                    <div class="reg-actions">${actionBtn}</div>`;
                 container.appendChild(div);
             });
         }
 
-        // --- RAZORPAY INTEGRATION FOR SINGLE PENDING PAYMENT ---
-        async function payNow(regId, feeAmount) {
-            if (!feeAmount || feeAmount <= 0) {
-                alert("Invalid amount. Please contact support.");
-                return;
-            }
+        // --- PAYMENT MODAL FUNCTIONS ---
 
-            const btn = document.getElementById(`pay-btn-${regId}`);
+        function openPaymentModal(regId, amount) {
+            pendingTx = { regId: regId, amount: amount, coupon: null };
+            
+            // Reset Modal UI
+            document.getElementById('payOriginalAmount').innerText = '₹' + amount;
+            document.getElementById('payFinalAmount').innerText = '₹' + amount;
+            document.getElementById('payCouponInput').value = '';
+            const msg = document.getElementById('payCouponMsg');
+            msg.innerText = '';
+            msg.style.color = '#ccc';
+            
+            document.getElementById('btnApplyCoupon').disabled = false;
+            document.getElementById('btnApplyCoupon').innerText = "Apply";
+            
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        async function validatePayCoupon() {
+            const code = document.getElementById('payCouponInput').value.trim();
+            if(!code) return;
+
+            const btn = document.getElementById('btnApplyCoupon');
+            const msg = document.getElementById('payCouponMsg');
+            
+            btn.innerText = "...";
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch('/api/coupon/validate', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ code }) 
+                });
+                
+                const data = await res.json();
+                if(res.ok) {
+                    pendingTx.coupon = data; // { code, percentage }
+                    msg.innerText = `Success! ${data.percentage}% Discount Applied.`;
+                    msg.style.color = '#00ff88';
+                    btn.innerText = "Applied";
+                    
+                    // Update Total
+                    const discount = Math.round((pendingTx.amount * data.percentage) / 100);
+                    const final = pendingTx.amount - discount;
+                    document.getElementById('payFinalAmount').innerText = '₹' + final;
+                } else {
+                    pendingTx.coupon = null;
+                    msg.innerText = data.error || "Invalid Coupon";
+                    msg.style.color = '#ff4444';
+                    btn.innerText = "Apply";
+                    btn.disabled = false;
+                    document.getElementById('payFinalAmount').innerText = '₹' + pendingTx.amount;
+                }
+            } catch(e) {
+                msg.innerText = "Network error.";
+                msg.style.color = '#ff4444';
+                btn.innerText = "Apply";
+                btn.disabled = false;
+            }
+        }
+
+        async function processPayment() {
+            const btn = document.getElementById('btnFinalPay');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
             btn.disabled = true;
 
             try {
-                // 1. Create Order
-                const orderRes = await fetch('/api/payment/create-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: feeAmount }) 
+                // Create Order (Sends Coupon to Backend for Secure Calc)
+                const orderRes = await fetch('/api/payment/create-order', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ 
+                        amount: pendingTx.amount, 
+                        couponCode: pendingTx.coupon ? pendingTx.coupon.code : null 
+                    }) 
                 });
                 
                 const orderData = await orderRes.json();
                 if (!orderData.id) throw new Error("Failed to create payment order.");
 
-                // 2. Razorpay Options
+                // Hide custom modal to show Razorpay
+                closePaymentModal();
+
                 const options = {
                     "key": orderData.key_id, 
                     "amount": orderData.amount, 
-                    "currency": "INR",
-                    "name": "LAKSHYA 2K26",
-                    "description": "Event Registration Fee",
-                    "image": "/assets/logo.png",
+                    "currency": "INR", 
+                    "name": "LAKSHYA 2K26", 
+                    "description": "Event Registration Fee", 
+                    "image": "/assets/logo.png", 
                     "order_id": orderData.id, 
                     "handler": async function (response) {
-                        // 3. Verify Payment
-                        btn.innerHTML = '<i class="fa-solid fa-lock"></i> Verifying...';
-                        
+                        // Verification
                         try {
                             const verifyRes = await fetch('/api/payment/verify', {
-                                method: 'POST',
+                                method: 'POST', 
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_signature: response.razorpay_signature,
-                                    registrationIds: [regId] // Sending as array
+                                body: JSON.stringify({ 
+                                    razorpay_order_id: response.razorpay_order_id, 
+                                    razorpay_payment_id: response.razorpay_payment_id, 
+                                    razorpay_signature: response.razorpay_signature, 
+                                    registrationIds: [pendingTx.regId],
+                                    couponCode: pendingTx.coupon ? pendingTx.coupon.code : null 
                                 })
                             });
-
                             const verifyData = await verifyRes.json();
-                            if (verifyData.status === 'success') {
-                                alert("Payment Successful! Updating records...");
-                                init(); // Reload data
-                            } else {
-                                alert("Payment verification failed. Please contact support.");
-                                btn.innerHTML = originalText;
-                                btn.disabled = false;
+                            if (verifyData.status === 'success') { 
+                                alert("Payment Successful!"); 
+                                init(); 
+                            } else { 
+                                alert("Verification failed. Contact support."); 
                             }
-                        } catch (err) {
-                            alert("Network error during verification. Check your dashboard.");
-                            init();
+                        } catch (err) { 
+                            alert("Network error during verification."); 
+                            init(); 
                         }
                     },
-                    "prefill": {
-                        "name": currentUser.name || "Student",
-                        "email": currentUser.email || "", 
-                        "contact": currentUser.mobile || ""
-                    },
-                    "theme": {
-                        "color": "#00d2ff"
-                    },
-                    "modal": {
-                        "ondismiss": function() {
+                    "prefill": { "name": currentUser.name, "email": currentUser.email, "contact": currentUser.mobile }, 
+                    "theme": { "color": "#00d2ff" },
+                    "modal": { 
+                        "ondismiss": function() { 
+                            // If user cancels Razorpay, show our modal again? Or just close.
+                            // Let's just reset button state if they want to try again.
                             btn.innerHTML = originalText;
                             btn.disabled = false;
-                        }
+                        } 
                     }
                 };
 
                 const rzp1 = new Razorpay(options);
-                rzp1.on('payment.failed', function (response){
-                    alert("Payment Failed: " + response.error.description);
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                rzp1.on('payment.failed', function (response){ 
+                    alert("Payment Failed: " + response.error.description); 
+                    btn.innerHTML = originalText; 
+                    btn.disabled = false; 
                 });
                 rzp1.open();
 
             } catch (e) {
                 console.error(e);
-                alert("Could not initiate payment. Try again later.");
+                alert("Could not initiate payment.");
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
@@ -355,78 +374,21 @@
         function printReceipt(regId) {
             const reg = allRegistrations.find(r => r.registrationId === regId);
             if (!reg) return;
-
             const eventDetails = eventCache[reg.eventId] || { title: "Event", fee: "0" };
-            
             const timestamp = reg.paymentDate || reg.registeredAt || new Date().toISOString();
-            const fixedDate = new Date(timestamp);
-            const dateStr = fixedDate.toLocaleDateString();
-            const timeStr = fixedDate.toLocaleTimeString();
-
-            // Members Table
-            let membersHtml = '';
-            if (reg.teamName) {
-                membersHtml = `<p><strong>Team:</strong> ${reg.teamName}</p>
-                <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:13px;">
-                    <tr style="background:#f4f4f4;"><th style="border:1px solid #ddd; padding:5px;">Name</th><th style="border:1px solid #ddd; padding:5px;">Roll No</th></tr>
-                    <tr><td style="border:1px solid #ddd; padding:5px;">${currentUser.name} (Lead)</td><td style="border:1px solid #ddd; padding:5px;">${currentUser.rollNo || '-'}</td></tr>`;
-                
-                if (reg.teamMembers) {
-                    reg.teamMembers.forEach(m => {
-                        membersHtml += `<tr><td style="border:1px solid #ddd; padding:5px;">${m.name}</td><td style="border:1px solid #ddd; padding:5px;">${m.roll || '-'}</td></tr>`;
-                    });
-                }
-                membersHtml += `</table>`;
-            } else {
-                membersHtml = `<p><strong>Participant:</strong> ${currentUser.name}</p><p><strong>Roll No:</strong> ${currentUser.rollNo || '-'}</p>`;
+            const dateStr = new Date(timestamp).toLocaleDateString();
+            
+            // Include Coupon in Receipt
+            let couponRow = '';
+            if(reg.couponUsed && reg.couponUsed !== 'NONE' && reg.couponUsed !== null) {
+                couponRow = `<div style="display:flex; justify-content:space-between; color:#00d2ff;"><span>Coupon: <strong>${reg.couponUsed}</strong></span></div>`;
             }
 
             const win = window.open('', '', 'width=700,height=700');
-            win.document.write(`
-                <html>
-                <head>
-                    <title>Receipt - ${eventDetails.title}</title>
-                    <style>
-                        body { font-family: 'Helvetica', sans-serif; padding: 40px; text-align: center; color: #333; }
-                        .receipt-box { border: 2px solid #00d2ff; padding: 30px; max-width: 500px; margin: 0 auto; border-radius: 10px; }
-                        h2 { color: #00d2ff; margin-bottom: 5px; text-transform: uppercase; }
-                        .meta { display: flex; justify-content: space-between; margin: 20px 0; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 0.9rem; }
-                        .details { text-align: left; margin: 20px 0; line-height: 1.6; }
-                        .status { display: inline-block; margin-top: 20px; padding: 8px 20px; border: 2px solid green; color: green; font-weight: bold; font-size: 1.2rem; transform: rotate(-5deg); border-radius: 5px; }
-                        .btn-print { margin-top: 20px; padding: 10px 20px; background: #333; color: white; border: none; cursor: pointer; border-radius: 5px; }
-                        @media print { .btn-print { display: none; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="receipt-box">
-                        <h2>LAKSHYA 2K26</h2>
-                        <p style="color:#666; margin-top:0;">Official Payment Receipt</p>
-                        
-                        <div class="meta">
-                            <span><strong>ID:</strong> ${regId.substring(0,8).toUpperCase()}</span>
-                            <span><strong>Date:</strong> ${dateStr} ${timeStr}</span>
-                        </div>
-
-                        <div class="details">
-                            <p style="font-size:1.2rem;"><strong>Event:</strong> ${eventDetails.title}</p>
-                            <p><strong>Department:</strong> ${reg.deptName}</p>
-                            <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
-                            ${membersHtml}
-                            <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span>Payment Mode: <strong>${reg.paymentMode || 'Online'}</strong></span>
-                                <span style="font-size:1.3rem;"><strong>₹${eventDetails.fee || 0}</strong></span>
-                            </div>
-                        </div>
-
-                        <div class="status">PAID & CONFIRMED</div>
-                    </div>
-                    <button class="btn-print" onclick="window.print()">Print Receipt</button>
-                </body>
-                </html>
-            `);
+            win.document.write(`<html><head><title>Receipt</title><style>body{font-family:sans-serif;padding:40px;text-align:center;}.box{border:2px solid #00d2ff;padding:30px;max-width:500px;margin:0 auto;}</style></head><body><div class="box"><h2>LAKSHYA 2K26</h2><p>Receipt</p><p>ID: ${regId.substring(0,8).toUpperCase()}</p><hr><p>${eventDetails.title} - ₹${eventDetails.fee}</p>${couponRow}<hr><h3>PAID</h3></div><button onclick="window.print()">Print</button></body></html>`);
         }
 
+        function logout() { localStorage.clear(); window.location.href = '../login'; }
         init();
     </script>
 </body>
