@@ -7,6 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- 1. CONNECT COMMON JS -->
+    <script>const CURRENT_PAGE = 'events';</script>
+    <script src="/js/common.js"></script>
+
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -407,8 +411,7 @@
     <div class="cosmic-bg"></div>
     <div class="grid-overlay"></div>
 
-    <!-- Load Common JS for Sidebar/Header -->
-    <script src="/js/common.js"></script>
+    <!-- Common JS handles Sidebar injection -->
 
     <main class="main-content">
         
@@ -436,7 +439,7 @@
                 <div class="filters-container">
                     <button class="filter-btn active" onclick="filterByType('all', this)">All</button>
                     <button class="filter-btn" onclick="filterByType('Major', this)">Major</button>
-                    <button class="filter-btn" onclick="filterByType('MBA', this)">Management</button>
+                    <button class="filter-btn" onclick="filterByType('MBA', this)">MBA</button>
                     <button class="filter-btn" onclick="filterByType('Special', this)">Special</button>
                     <button class="filter-btn" onclick="filterByType('Cultural', this)">Cultural</button>
                 </div>
@@ -454,7 +457,7 @@
 
         <div class="section-container" id="sec-MBA">
             <div class="section-header">
-                <div class="section-title">Management Events</div>
+                <div class="section-title">MBA Events</div>
                 <div class="section-line"></div>
             </div>
             <div class="cards-grid" id="mbaEventsContainer"></div>
@@ -476,6 +479,11 @@
             <div class="cards-grid" id="otherEventsContainer"></div>
         </div>
 
+        <!-- Footer Terms Link -->
+        <div style="text-align:center; padding-top:40px; padding-bottom:20px;">
+             <a href="/terms" target="_blank" style="color:#666; text-decoration:none; font-size:0.9rem; font-family:'Outfit', sans-serif;">Terms & Conditions</a>
+        </div>
+
     </main>
 
     <!-- INFO MODAL -->
@@ -485,7 +493,6 @@
             
             <h2 id="modalTitle" style="font-family:'Rajdhani'; font-size:2rem; color:var(--primary-color); margin-bottom:10px;">Event Title</h2>
             <div class="info-row">
-                <!-- FIXED: This ID will now be populated dynamically -->
                 <span class="info-chip" id="modalType">Category</span>
                 <span class="info-chip"><i class="fa-solid fa-indian-rupee-sign"></i> <span id="modalFee">0</span></span>
                 <span class="info-chip"><i class="fa-solid fa-users"></i> <span id="modalTeam">1</span></span>
@@ -545,15 +552,27 @@
     </div>
 
     <script>
-        const CURRENT_PAGE = 'events';
         let allEvents = [];
+        let myRegistrations = [];
         let currentEventId = null;
         let activeFilterType = 'all';
         let pendingCartItem = null;
 
-        function showNotification(msg) {
+        function showNotification(msg, isError = false) {
             const notif = document.getElementById('notification');
             document.getElementById('notifMsg').innerText = msg;
+            
+            const icon = notif.querySelector('i');
+            if (isError) {
+                notif.style.borderLeftColor = '#ff4444';
+                icon.className = 'fa-solid fa-circle-exclamation';
+                icon.style.color = '#ff4444';
+            } else {
+                notif.style.borderLeftColor = '#00d2ff';
+                icon.className = 'fa-solid fa-circle-check';
+                icon.style.color = '#00d2ff';
+            }
+
             notif.style.transform = 'translateX(0)';
             setTimeout(() => {
                 notif.style.transform = 'translateX(150%)';
@@ -562,6 +581,7 @@
 
         async function loadUserDetails() {
             try {
+                // 1. Fetch User Stats (Name)
                 const res = await fetch('/api/participant/dashboard-stats');
                 if(res.ok) {
                     const data = await res.json();
@@ -569,8 +589,15 @@
                     document.getElementById('navUserName').innerText = name;
                     document.getElementById('navUserAvatar').innerText = name.charAt(0).toUpperCase();
                 }
+
+                // 2. Fetch Existing Registrations for Validation
+                const resReg = await fetch('/api/participant/my-registrations-data');
+                if(resReg.ok) {
+                    myRegistrations = await resReg.json();
+                }
+
             } catch(e) {
-                console.log("Could not fetch user name", e);
+                console.log("Could not fetch user info", e);
             }
         }
 
@@ -678,8 +705,6 @@
             document.getElementById('modalTitle').innerText = event.title;
             document.getElementById('modalFee').innerText = event.fee;
             document.getElementById('modalTeam').innerText = event.teamSize || "1";
-            
-            // FIXED: Update the Category Badge text dynamically
             document.getElementById('modalType').innerText = event.type || 'General';
             
             let content = '';
@@ -731,6 +756,15 @@
                 select.style.borderColor = '#ff4444';
                 return;
             }
+            const selectedDept = select.value;
+
+            // --- CHECK 1: ALREADY REGISTERED? ---
+            const isRegistered = myRegistrations.find(r => r.eventId === currentEventId && r.deptName === selectedDept);
+            if (isRegistered) {
+                showNotification("⚠️ You are already registered for this event.", true);
+                closeModal('deptModal');
+                return;
+            }
 
             const event = allEvents.find(e => e.eventId === currentEventId);
             
@@ -742,8 +776,8 @@
 
             pendingCartItem = {
                 eventId: currentEventId,
-                deptName: select.value, 
-                dept: select.value,
+                deptName: selectedDept, 
+                dept: selectedDept,
                 addedAt: new Date().toISOString(),
                 teamName: null,
                 teamMembers: []
@@ -838,14 +872,16 @@
         }
 
         async function pushToServerCart(newItem) {
-            showNotification("Saving to cart...");
+            showNotification("Checking cart...");
             try {
                 const resGet = await fetch('/api/cart');
                 let currentCart = [];
                 if(resGet.ok) currentCart = await resGet.json();
 
-                if(currentCart.find(i => i.eventId === newItem.eventId)) {
-                    showNotification("⚠️ Event already in cart");
+                // --- CHECK 2: ALREADY IN CART? ---
+                // We check both EventID AND Department
+                if(currentCart.find(i => i.eventId === newItem.eventId && i.dept === newItem.dept)) {
+                    showNotification("⚠️ This event (same dept) is already in your cart.", true);
                     return;
                 }
 
