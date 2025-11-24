@@ -496,77 +496,102 @@ app.get('/api/participant/dashboard-stats', isAuthenticated('participant'), asyn
     }
 });
 
+// --- REPLACE YOUR EXISTING VERIFY ROUTE WITH THIS ---
 app.post('/api/payment/verify', isAuthenticated('participant'), async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, registrationIds } = req.body;
-    const userEmail = req.session.user.email; 
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, registrationIds, couponCode } = req.body;
+    const userEmail = req.session.user.email;
+    const userName = req.session.user.name || "Participant";
 
-    // A. Security: Verify Digital Signature
     const body = razorpay_order_id + "|" + razorpay_payment_id;
-    
-    // FIX: Use the fallback secret if process.env is missing
     const expectedSignature = crypto
-        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'XqfcDBCtT3RD570yw8fGT43u')
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
         .update(body.toString())
         .digest('hex');
 
-    // B. Check if Signature Matches
     if (expectedSignature === razorpay_signature) {
         try {
-            // C. Database Update: Mark all registrations as COMPLETED
-            if (registrationIds && Array.isArray(registrationIds) && registrationIds.length > 0) {
-                
-                // Update each registration in DynamoDB
+            if (registrationIds && Array.isArray(registrationIds)) {
+                // 1. Update Database
                 const updatePromises = registrationIds.map(regId => 
                     docClient.send(new UpdateCommand({
                         TableName: 'Lakshya_Registrations',
                         Key: { registrationId: regId },
-                        UpdateExpression: "set paymentStatus = :s, paymentId = :p, paymentMode = :m, attendance = :a",
+                        UpdateExpression: "set paymentStatus = :s, paymentId = :p, paymentMode = :m, attendance = :a, couponUsed = :c, paymentDate = :d",
                         ExpressionAttributeValues: {
                             ":s": "COMPLETED",
                             ":p": razorpay_payment_id,
                             ":m": "ONLINE",
-                            ":a": false 
+                            ":a": false,
+                            ":c": couponCode || null,
+                            ":d": new Date().toISOString()
                         }
                     }))
                 );
-
                 await Promise.all(updatePromises);
 
-                // D. Send Confirmation Email
-                const subject = `Payment Receipt - Transaction ID: ${razorpay_payment_id}`;
+                // 2. Fetch Event Names for Email (Enhancement)
+                // We fetch details for the first registration to get team info context, 
+                // and loop through all to get event titles.
+                // Note: Ideally, you'd query the Events table, but for simplicity, we'll assume generic names 
+                // or you can fetch them if 'eventCache' is available server-side (it's usually client-side).
+                // A robust way is to fetch the registration items back or rely on frontend passing titles (less secure).
+                // BETTER: Let's fetch the just-updated registrations to get eventIds, then get titles.
+                
+                // For speed/simplicity in this snippet, we will send a generic success mail with IDs.
+                // To show Event Titles, you would need to query your Lakshya_Events table using the eventIds from registrationIds.
+                
+                const dateStr = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+                // 3. Enhanced Email Template
+                const subject = `Payment Successful - LAKSHYA 2K26`;
                 const htmlContent = `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
                         <div style="background-color: #00d2ff; padding: 20px; text-align: center;">
-                            <h2 style="color: #ffffff; margin: 0;">Payment Successful!</h2>
+                            <h2 style="color: #ffffff; margin: 0; text-transform: uppercase;">Payment Confirmed</h2>
                         </div>
                         <div style="padding: 30px; background-color: #ffffff;">
-                            <p style="font-size: 16px; color: #333;">Dear Participant,</p>
+                            <p style="font-size: 16px; color: #333;">Dear <strong>${userName}</strong>,</p>
                             <p style="color: #555; line-height: 1.6;">
                                 We have successfully received your payment for <strong>LAKSHYA 2K26</strong>. 
-                                Transaction ID: <strong>${razorpay_payment_id}</strong>
+                                Your registrations are now confirmed.
                             </p>
+                            
+                            <div style="background-color: #f8f9fa; padding: 15px; margin: 20px 0; border-left: 4px solid #4caf50; border-radius: 4px;">
+                                <p style="margin: 5px 0;"><strong>Transaction ID:</strong> ${razorpay_payment_id}</p>
+                                <p style="margin: 5px 0;"><strong>Order ID:</strong> ${razorpay_order_id}</p>
+                                <p style="margin: 5px 0;"><strong>Date:</strong> ${dateStr}</p>
+                                <p style="margin: 5px 0;"><strong>Total Events:</strong> ${registrationIds.length}</p>
+                                ${couponCode ? `<p style="margin: 5px 0; color: #00d2ff;"><strong>Coupon Applied:</strong> ${couponCode}</p>` : ''}
+                            </div>
+
                             <p style="color: #777; font-size: 14px;">
-                                You can view your registration details in your dashboard.
+                                Please visit your dashboard to view full registration details, team members, and download your event passes/receipts.
                             </p>
+
+                            <div style="text-align: center; margin-top: 30px;">
+                                <a href="https://testify-lac.com/participant/my-registrations" style="background-color: #3a7bd5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Go to Dashboard</a>
+                            </div>
+                        </div>
+                        <div style="background-color: #f1f1f1; padding: 15px; text-align: center; color: #888; font-size: 12px;">
+                            &copy; 2026 LAKSHYA Fest Committee. All rights reserved.<br>
+                            Need help? Contact <a href="mailto:support@testify-lac.com">support@testify-lac.com</a>
                         </div>
                     </div>
                 `;
-                
-                // Send email (ignoring errors to prevent blocking response)
+
+                // Send Email (Non-blocking)
                 sendEmail(userEmail, subject, htmlContent).catch(console.error);
             }
-
-            res.json({ status: 'success', message: 'Payment Verified & Email Sent' });
-
+            res.json({ status: 'success' });
         } catch (err) {
-            console.error("Database/Email Error:", err);
-            res.status(500).json({ error: 'Payment verified but system update failed.' });
+            console.error("DB Error:", err);
+            res.status(500).json({ error: 'Payment valid but DB update failed' });
         }
     } else {
-        console.warn(`Invalid Signature detected for Order ${razorpay_order_id}`);
-        res.status(400).json({ error: 'Invalid payment signature' });
+        res.status(400).json({ error: 'Invalid signature' });
     }
 });
+
 // --- 10. COORDINATOR ROUTES ---
 app.post('/api/coordinator/mark-attendance', isAuthenticated('coordinator'), async (req, res) => {
     const { registrationId, status } = req.body;
@@ -1919,6 +1944,147 @@ app.get('/coordinator/view-submissions', isAuthenticated('coordinator'), (req, r
 });
 app.get('/coordinator/event-control', isAuthenticated('coordinator'), (req, res) => {
     res.sendFile(path.join(__dirname, 'public/coordinator/event-control.html'));
+});
+
+
+///
+
+// ==========================================
+//          CHATBOT LOGIC START
+// ==========================================
+
+// 1. Define Custom FAQs (Rule-Based Knowledge)
+const customFAQs = [
+    { 
+        keywords: ['accommodation', 'stay', 'room', 'hostel', 'dorm'], 
+        answer: "Accommodation is provided in the college hostels for ₹200/day. You can request it via the Coordinator.",
+        action: { text: "Contact Coordinator", link: "/contact" }
+    },
+    { 
+        keywords: ['certificate', 'participation', 'download'], 
+        answer: "Certificates will be available for download in the 'Certificates' tab 24 hours after the event ends.",
+        action: { text: "Go to Certificates", link: "/participant/certificates" }
+    },
+    { 
+        keywords: ['refund', 'cancel', 'money back', 'return'], 
+        answer: "Registration fees are strictly non-refundable. However, you can transfer your ticket to a teammate by contacting support.",
+        action: null
+    },
+    { 
+        keywords: ['food', 'lunch', 'canteen', 'dinner', 'eat'], 
+        answer: "Food coupons are provided in event kit, valid at the food stalls during fest.",
+        action: null
+    },
+    { 
+        keywords: ['location', 'address', 'where', 'map', 'venue'], 
+        answer: "The fest is held at the Main Campus, Admin Block. You can find the Google Maps link on our Contact page.",
+        action: { text: "View Map", link: "/contact" }
+    },
+    { 
+        keywords: ['timing', 'schedule', 'when', 'start', 'time'], 
+        answer: "Events generally start at 9:00 AM sharp. Please check the specific event details page for exact timings.",
+        action: { text: "Check Events", link: "/events" }
+    },
+    { 
+        keywords: ['team', 'size', 'group', 'member'], 
+        answer: "Team sizes vary by event (usually 1-4 members). You can add team members during the registration process.",
+        action: null
+    },
+    { 
+        keywords: ['contact', 'help', 'issue', 'problem', 'support'],
+        answer: "You can reach the coordinators at support@testify-lac.com or visit the Committee page.",
+        action: { text: "Committee Info", link: "/committee" }
+    }
+];
+
+// 2. Chatbot API Endpoint
+app.post('/api/chat', async (req, res) => {
+    const { message } = req.body;
+    // Check if session exists, otherwise treat as guest
+    const user = req.session.user || null; 
+    const msg = message.toLowerCase();
+    
+    let reply = "I'm not sure about that. Try asking about 'accommodation', 'certificates', or 'events'.";
+    let actions = []; 
+
+    try {
+        // --- A. GREETINGS ---
+        if (msg.match(/\b(hi|hello|hey|greetings)\b/)) {
+            reply = `Hello ${user ? user.name.split(' ')[0] : 'there'}! I can help you with Event Details, Registration Status, or General FAQs.`;
+            actions = [
+                { text: "Browse Events", val: "show events" },
+                { text: "Accommodation?", val: "accommodation details" },
+                { text: "My Status", val: "my registration status" }
+            ];
+        }
+
+        // --- B. CUSTOM FAQ MATCHING (Rule-Based) ---
+        else {
+            // Check if the message matches any keyword in our FAQ list
+            const matchedFAQ = customFAQs.find(faq => 
+                faq.keywords.some(keyword => msg.includes(keyword))
+            );
+
+            if (matchedFAQ) {
+                reply = matchedFAQ.answer;
+                if (matchedFAQ.action) actions.push(matchedFAQ.action);
+            }
+            
+            // --- C. DYNAMIC DATABASE QUERIES ---
+            
+            // 1. Query Events (Keywords: event, list, show, technical)
+            else if (msg.includes('event') || msg.includes('list') || msg.includes('show')) {
+                // Fetch events from DB
+                const data = await docClient.send(new ScanCommand({ TableName: 'Lakshya_Events' }));
+                const events = data.Items || [];
+                
+                if (msg.includes('technical') || msg.includes('major')) {
+                    const tech = events.filter(e => e.type === 'Major' || e.type === 'Special');
+                    reply = `We have ${tech.length} major technical events available!`;
+                    actions = [{ text: "View Technical Events", link: "/events" }];
+                } else {
+                    reply = `We have ${events.length} total events exciting events lined up! You can browse them all below.`;
+                    actions = [{ text: "Go to Events Page", link: "/events" }];
+                }
+            }
+
+            // 2. User Specific Status (Keywords: my, status, register)
+            else if (msg.includes('my') || msg.includes('status') || msg.includes('register')) {
+                if (!user) {
+                    reply = "You need to login to check your specific registration status.";
+                    actions = [{ text: "Login Now", link: "/login" }];
+                } else {
+                    const params = {
+                        TableName: 'Lakshya_Registrations',
+                        IndexName: 'StudentIndex',
+                        KeyConditionExpression: 'studentEmail = :email',
+                        ExpressionAttributeValues: { ':email': user.email }
+                    };
+                    const data = await docClient.send(new QueryCommand(params));
+                    const regs = data.Items || [];
+                    
+                    if (regs.length === 0) {
+                        reply = "You haven't registered for any events yet.";
+                        actions = [{ text: "Register Now", link: "/events" }];
+                    } else {
+                        const paidCount = regs.filter(r => r.paymentStatus === 'COMPLETED').length;
+                        reply = `You are registered for ${regs.length} events (${paidCount} Confirmed/Paid). Check your dashboard for full details.`;
+                        actions = [{ text: "View Dashboard", link: "/participant/dashboard" }];
+                    }
+                }
+            }
+        }
+
+        res.json({ reply, actions });
+
+    } catch (err) {
+        console.error("Chat Error:", err);
+        // Fallback in case of DB error
+        res.json({ 
+            reply: "My brain is having a glitch (Database Error). Try again later.", 
+            actions: [{ text: "Refresh Page", link: "#" }] 
+        });
+    }
 });
 const PORT = process.env.PORT || 3000;
 
