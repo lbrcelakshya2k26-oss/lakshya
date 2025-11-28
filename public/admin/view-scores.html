@@ -74,16 +74,18 @@
             display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
         }
         
-        select {
+        select, input {
             padding: 12px; background: #151520; border: 1px solid #444; color: white; 
-            border-radius: 6px; outline: none; font-family: 'Poppins'; min-width: 200px; cursor: pointer;
+            border-radius: 6px; outline: none; font-family: 'Poppins';
         }
-        select:focus { border-color: var(--primary-color); }
+        select { min-width: 180px; cursor: pointer; }
+        input { flex-grow: 1; min-width: 200px; }
+        input:focus, select:focus { border-color: var(--primary-color); }
 
         .btn { 
             padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; 
             font-weight: 600; color: white; display: flex; align-items: center; gap: 8px; 
-            transition: 0.3s; font-size: 0.9rem; margin-left: auto;
+            transition: 0.3s; font-size: 0.9rem;
         }
         .btn-excel { background: rgba(31, 111, 74, 0.4); border: 1px solid #2e8b57; color: #4caf50; } 
         .btn-excel:hover { background: #2e8b57; color: white; transform: translateY(-2px); }
@@ -113,6 +115,24 @@
         .rank-2 { background: #c0c0c0; color: black; }
         .rank-3 { background: #cd7f32; color: black; }
         .rank-other { background: rgba(255,255,255,0.1); color: #aaa; }
+
+        .click-link { color: var(--primary-color); cursor: pointer; text-decoration: underline; font-weight: 600; transition: 0.2s; }
+        .click-link:hover { color: white; text-shadow: 0 0 10px var(--primary-color); }
+
+        /* --- MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #151520; width: 90%; max-width: 800px; padding: 2rem; border-radius: 15px; border: 1px solid var(--border-color); position: relative; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .modal-close { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.5rem; color: #aaa; transition: 0.2s; }
+        .modal-close:hover { color: #ff4444; transform: rotate(90deg); }
+
+        .team-table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 0.9rem; }
+        .team-table th { background: rgba(255,255,255,0.05); color: var(--secondary-color); padding: 8px; text-align: left; }
+        .team-table td { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 8px; color: #aaa; }
+        
+        .detail-section-title { color: var(--primary-color); margin: 20px 0 10px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; font-size: 1.1rem; }
+        .detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 0; }
+        .detail-label { color: #888; }
+        .detail-val { color: white; font-weight: 500; text-align: right; }
 
         /* --- RESPONSIVE --- */
         @media(max-width: 1024px) { 
@@ -145,38 +165,15 @@
             <i class="fa-solid fa-xmark close-sidebar-btn" onclick="toggleSidebar()"></i>
         </div>
         <ul class="menu">
-           <li><a href="dashboard" class="active">
-    <i class="fa-solid fa-gauge-high"></i> Dashboard
-</a></li>
-
-<li><a href="registrations">
-    <i class="fa-solid fa-clipboard-list"></i> Registrations
-</a></li>
-
-<li><a href="add-event">
-    <i class="fa-solid fa-calendar-plus"></i> Add Event
-</a></li>
-
-<li><a href="departments">
-    <i class="fa-solid fa-building-columns"></i> Departments
-</a></li>
-
-<li><a href="manage-users">
-    <i class="fa-solid fa-users"></i> Users
-</a></li>
-
-<li><a href="committee">
-    <i class="fa-solid fa-user-tie"></i> Committee
-</a></li>
-
-<li><a href="setup-scoring">
-    <i class="fa-solid fa-sliders"></i> Setup Scoring
-</a></li>
-
-<li><a href="view-scores" class="active">
-    <i class="fa-solid fa-square-poll-vertical"></i> View Scores
-</a></li>
- <li><a onclick="logout()" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+           <li><a href="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+           <li><a href="registrations"><i class="fa-solid fa-clipboard-list"></i> Registrations</a></li>
+           <li><a href="add-event"><i class="fa-solid fa-calendar-plus"></i> Add Event</a></li>
+           <li><a href="departments"><i class="fa-solid fa-building-columns"></i> Departments</a></li>
+           <li><a href="manage-users"><i class="fa-solid fa-users"></i> Users</a></li>
+           <li><a href="committee"><i class="fa-solid fa-user-tie"></i> Committee</a></li>
+           <li><a href="setup-scoring"><i class="fa-solid fa-sliders"></i> Setup Scoring</a></li>
+           <li><a href="view-scores" class="active"><i class="fa-solid fa-square-poll-vertical"></i> View Scores</a></li>
+           <li><a onclick="logout()" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
         </ul>
     </aside>
 
@@ -189,15 +186,16 @@
         <div class="controls-bar">
             <select id="deptSelect" onchange="loadScores()">
                 <option value="all">All Departments</option>
-                <!-- Populated by JS -->
             </select>
 
             <select id="eventSelect" onchange="loadScores()">
                 <option value="all">All Events</option>
-                <!-- Populated by JS -->
             </select>
+
+            <!-- Added Search Input -->
+            <input type="text" id="searchInput" placeholder="Search Team, Name, or Roll No..." onkeyup="filterLocalData()">
             
-            <div style="display:flex; gap:10px; margin-left:auto;">
+            <div style="display:flex; gap:10px;">
                 <button class="btn btn-excel" onclick="exportExcel()">Excel <i class="fa-solid fa-file-excel"></i></button>
                 <button class="btn btn-pdf" onclick="exportPDF()">PDF <i class="fa-solid fa-file-pdf"></i></button>
             </div>
@@ -223,9 +221,20 @@
         </div>
     </main>
 
+    <!-- Details Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-box">
+            <span class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></span>
+            <h3 style="color:var(--primary-color); margin-bottom:10px; font-family:'Montserrat';" id="modalTitle">Details</h3>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
     <script>
         let currentScores = [];
+        let filteredScores = [];
         let eventsMap = {};
+        let userDetailsMap = {};
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
@@ -239,7 +248,10 @@
                 const depts = await deptRes.json();
                 const deptSelect = document.getElementById('deptSelect');
                 depts.forEach(d => {
-                    deptSelect.innerHTML += `<option value="${d.name}">${d.name}</option>`;
+                    const opt = document.createElement('option');
+                    opt.value = d.name;
+                    opt.innerText = d.name;
+                    deptSelect.appendChild(opt);
                 });
 
                 // 2. Fetch Events
@@ -248,7 +260,10 @@
                 const eventSelect = document.getElementById('eventSelect');
                 eventsData.forEach(e => {
                     eventsMap[e.eventId] = e.title;
-                    eventSelect.innerHTML += `<option value="${e.eventId}">${e.title}</option>`;
+                    const opt = document.createElement('option');
+                    opt.value = e.eventId;
+                    opt.innerText = e.title;
+                    eventSelect.appendChild(opt);
                 });
 
                 // Load initial data
@@ -265,40 +280,94 @@
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;">Loading scores...</td></tr>';
 
             try {
-                const res = await fetch(`/api/admin/scores?eventId=${event}&deptName=${dept}`);
+                // FIXED: Use encodeURIComponent to handle special characters like '&' in department names
+                const res = await fetch(`/api/admin/scores?eventId=${encodeURIComponent(event)}&deptName=${encodeURIComponent(dept)}`);
                 currentScores = await res.json();
+                
+                // Fetch User Details for loaded scores to enable the modal
+                await bulkFetchUserDetails(currentScores);
 
-                renderTable();
+                // Initial render without search filter
+                filterLocalData();
+
             } catch (e) {
                 console.error(e);
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Failed to load scores.</td></tr>';
             }
         }
 
-        function renderTable() {
+        // --- BULK FETCH USER DETAILS ---
+        async function bulkFetchUserDetails(scoresData) {
+            let emails = [];
+            
+            scoresData.forEach(s => {
+                if(s.studentEmail) emails.push(s.studentEmail);
+                if(s.teamMembers && Array.isArray(s.teamMembers)) {
+                    s.teamMembers.forEach(m => { if(m.email) emails.push(m.email); });
+                }
+            });
+
+            const unique = [...new Set(emails)];
+            if(unique.length === 0) return;
+
+            try {
+                const res = await fetch('/api/admin/export-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emails: unique })
+                });
+                // Merge new details with existing map
+                const newDetails = await res.json();
+                userDetailsMap = { ...userDetailsMap, ...newDetails };
+            } catch(e) { console.error("Details Fetch Error:", e); }
+        }
+
+        // --- CLIENT-SIDE FILTERING ---
+        function filterLocalData() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredScores = currentScores.filter(score => {
+                const user = userDetailsMap[score.studentEmail] || {};
+                const name = (score.teamName || user.fullName || score.studentEmail).toLowerCase();
+                const rollNo = (user.rollNo || '').toLowerCase();
+                const email = score.studentEmail.toLowerCase();
+                const eventName = (eventsMap[score.eventId] || score.eventId).toLowerCase();
+
+                return name.includes(term) || rollNo.includes(term) || email.includes(term) || eventName.includes(term);
+            });
+
+            renderTable(filteredScores);
+        }
+
+        function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            if(currentScores.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#aaa;">No scores found for selected criteria.</td></tr>';
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#aaa;">No scores found.</td></tr>';
                 return;
             }
 
-            currentScores.forEach((score, index) => {
+            data.forEach((score, index) => {
                 const rank = index + 1;
                 let rankClass = 'rank-other';
                 if(rank === 1) rankClass = 'rank-1';
                 else if(rank === 2) rankClass = 'rank-2';
                 else if(rank === 3) rankClass = 'rank-3';
 
-                const name = score.teamName || score.studentEmail;
+                const user = userDetailsMap[score.studentEmail] || {};
+                const displayName = score.teamName || user.fullName || score.studentEmail;
                 const eventName = eventsMap[score.eventId] || score.eventId;
                 const deptName = score.deptName || 'General';
 
                 tbody.innerHTML += `
                     <tr>
                         <td><div class="rank-badge ${rankClass}">${rank}</div></td>
-                        <td style="font-weight:600; color:white;">${name}</td>
+                        <td>
+                            <span class="click-link" onclick="viewDetails('${score.registrationId}')">
+                                ${displayName}
+                            </span>
+                        </td>
                         <td>${eventName}</td>
                         <td>${deptName}</td>
                         <td style="font-weight:bold; color:var(--primary-color); font-size:1.1rem;">${score.totalScore}</td>
@@ -307,16 +376,100 @@
             });
         }
 
-        function exportExcel() {
-            if(currentScores.length === 0) return alert("No data to export");
+        // --- DETAILS MODAL ---
+        async function viewDetails(regId) {
+            const reg = currentScores.find(r => r.registrationId === regId);
+            if(!reg) return;
+
+            const user = userDetailsMap[reg.studentEmail] || {};
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('modalContent');
+            const title = document.getElementById('modalTitle');
             
-            const data = currentScores.map((s, i) => ({
-                Rank: i + 1,
-                Name: s.teamName || s.studentEmail,
-                Event: eventsMap[s.eventId] || s.eventId,
-                Department: s.deptName || 'General',
-                Score: s.totalScore
-            }));
+            modal.style.display = 'flex';
+            
+            let mainTitle = reg.teamName ? `Team: ${reg.teamName}` : `Participant: ${user.fullName}`;
+            title.innerText = mainTitle;
+
+            let html = `
+                <div style="display:flex; justify-content:space-between; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; margin-bottom:15px;">
+                    <span>Event: <strong style="color:var(--primary-color)">${eventsMap[reg.eventId] || reg.eventId}</strong></span>
+                    <span>Score: <strong style="color:var(--primary-color); font-size:1.2rem;">${reg.totalScore}</strong></span>
+                </div>
+
+                <h4 class="detail-section-title">1. Team Lead Details</h4>
+                <div class="detail-row"><span class="detail-label">Full Name</span><span class="detail-val">${user.fullName || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">Email</span><span class="detail-val">${reg.studentEmail}</span></div>
+                <div class="detail-row"><span class="detail-label">Mobile</span><span class="detail-val">${user.mobile || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">Roll Number</span><span class="detail-val">${user.rollNo || 'N/A'}</span></div>
+
+                <h4 class="detail-section-title">2. Team Members</h4>
+                <div class="table-scroll" style="max-height:200px;">
+                <table class="team-table">
+                    <thead>
+                        <tr><th>Name</th><th>Mobile</th><th>Email</th><th>Roll No</th></tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            if(reg.teamMembers && reg.teamMembers.length > 0) {
+                reg.teamMembers.forEach(m => {
+                    const mDetails = userDetailsMap[m.email] || {};
+                    const mRoll = mDetails.rollNo || m.rollNo || m.regNo || '-';
+                    html += `
+                        <tr>
+                            <td>${m.name || '-'}</td>
+                            <td>${m.mobile || '-'}</td>
+                            <td>${m.email || '-'}</td>
+                            <td>${mRoll}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += `<tr><td colspan="4" style="text-align:center; color:#666;">No additional members.</td></tr>`;
+            }
+
+            html += `
+                    </tbody>
+                </table>
+                </div>
+
+                <h4 class="detail-section-title">3. Institution Details</h4>
+                <div class="detail-row"><span class="detail-label">Department</span><span class="detail-val">${user.dept || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">College</span><span class="detail-val">${user.college || 'N/A'}</span></div>
+                
+                <h4 class="detail-section-title">4. Score Breakdown</h4>
+            `;
+
+            if(reg.scoreBreakdown) {
+                 html += `<div style="background:rgba(255,255,255,0.02); padding:10px; border-radius:8px;">`;
+                 for (const [key, value] of Object.entries(reg.scoreBreakdown)) {
+                    html += `<div class="detail-row" style="border-bottom:1px dashed #333;"><span class="detail-label">${key}</span><span class="detail-val">${value}</span></div>`;
+                 }
+                 html += `</div>`;
+            } else {
+                 html += `<p style="color:#666;">No breakdown available.</p>`;
+            }
+            
+            content.innerHTML = html;
+        }
+
+        function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
+
+        function exportExcel() {
+            if(filteredScores.length === 0) return alert("No data to export");
+            
+            const data = filteredScores.map((s, i) => {
+                const user = userDetailsMap[s.studentEmail] || {};
+                return {
+                    Rank: i + 1,
+                    Name: s.teamName || user.fullName || s.studentEmail,
+                    Event: eventsMap[s.eventId] || s.eventId,
+                    Department: s.deptName || 'General',
+                    Score: s.totalScore,
+                    "Lead Mobile": user.mobile || '-'
+                };
+            });
 
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
@@ -325,7 +478,7 @@
         }
 
         function exportPDF() {
-            if(currentScores.length === 0) return alert("No data to export");
+            if(filteredScores.length === 0) return alert("No data to export");
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -335,13 +488,16 @@
             doc.setFontSize(11);
             doc.setTextColor(100);
 
-            const tableData = currentScores.map((s, i) => [
-                i + 1,
-                s.teamName || s.studentEmail,
-                eventsMap[s.eventId] || s.eventId,
-                s.deptName || 'General',
-                s.totalScore
-            ]);
+            const tableData = filteredScores.map((s, i) => {
+                const user = userDetailsMap[s.studentEmail] || {};
+                return [
+                    i + 1,
+                    s.teamName || user.fullName || s.studentEmail,
+                    eventsMap[s.eventId] || s.eventId,
+                    s.deptName || 'General',
+                    s.totalScore
+                ];
+            });
 
             doc.autoTable({
                 head: [['Rank', 'Name', 'Event', 'Dept', 'Score']],
@@ -354,7 +510,7 @@
 
         function logout() {
             localStorage.clear();
-            window.location.href = '/login';
+            window.location.href = '../login';
         }
 
         init();
