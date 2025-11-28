@@ -6,7 +6,8 @@
     <title>Login | LAKSHYA 2K26</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+        <link rel="icon" type="image/png" href="\assets\logo.png">
+
     <style>
         /* --- GLOBAL VARIABLES --- */
         :root {
@@ -34,215 +35,123 @@
             background: var(--dark-overlay); z-index: -1;
         }
 
-        /* --- NAVIGATION BAR --- */
+        /* --- UPDATED RESPONSIVE NAVIGATION --- */
         nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 1.2rem 4rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
+            position: fixed; top: 0; left: 0; width: 100%;
+            height: 90px; padding: 0 4%;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; transition: 0.4s;
             background: rgba(5, 5, 10, 0.6); 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--glass-border);
-            transition: 0.4s;
         }
 
         .logo {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 900;
+            font-family: 'Montserrat', sans-serif; font-size: 1.8rem; font-weight: 900;
             background: linear-gradient(45deg, var(--primary-color), #ffffff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1px;
-            z-index: 1002;
-            cursor: pointer;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            cursor: pointer; z-index: 1002;
         }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2.5rem;
-            transition: 0.4s;
-            align-items: center;
-        }
+        
+        .nav-links { display: flex; list-style: none; gap: 2rem; align-items: center; transition: 0.4s; }
 
         .nav-links li a {
-            text-decoration: none;
-            color: var(--text-color);
-            font-weight: 500;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: 0.3s;
-            position: relative;
+            text-decoration: none; color: var(--text-color); font-weight: 500;
+            font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.3s; position: relative; white-space: nowrap;
         }
 
-        .nav-links li a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0%;
-            height: 2px;
-            background: var(--primary-color);
-            transition: 0.3s;
-        }
-
+        .nav-links li a:hover, .nav-links li a.active { color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
+        .nav-links li a::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 0%; height: 2px; background: var(--primary-color); transition: 0.3s; }
         .nav-links li a:hover::after { width: 100%; }
-        .nav-links li a:hover { color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
 
         .btn-login { padding: 0.6rem 1.5rem; border: 1px solid var(--primary-color); border-radius: 50px; color: var(--primary-color) !important; }
         .btn-register { padding: 0.6rem 1.5rem; background: linear-gradient(45deg, var(--secondary-color), var(--primary-color)); border-radius: 50px; color: white !important; }
 
-        /* Mobile Menu Icon */
-        .menu-toggle {
-            display: none;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 30px;
-            height: 21px;
-            cursor: pointer;
-            z-index: 1003;
-        }
-
-        .bar {
-            width: 100%;
-            height: 3px;
-            background-color: white;
-            border-radius: 3px;
-            transition: 0.4s;
-        }
-
-        .menu-toggle.is-active .bar:nth-child(1) { transform: translateY(9px) rotate(45deg); background: var(--primary-color); }
+        /* Mobile Menu Toggle */
+        .menu-toggle { display: none; flex-direction: column; justify-content: space-between; width: 30px; height: 21px; cursor: pointer; z-index: 1003; }
+        .bar { width: 100%; height: 3px; background-color: white; border-radius: 3px; transition: 0.4s; }
+        
+        .menu-toggle.is-active .bar:nth-child(1) { transform: translateY(9px) rotate(45deg); background-color: var(--primary-color); }
         .menu-toggle.is-active .bar:nth-child(2) { opacity: 0; }
-        .menu-toggle.is-active .bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); background: var(--primary-color); }
+        .menu-toggle.is-active .bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); background-color: var(--primary-color); }
 
         /* --- LOGIN CONTAINER --- */
         .container {
             min-height: 100vh; display: flex; justify-content: center; align-items: center;
-            padding: 100px 20px 20px 20px;
+            padding: 120px 20px 20px 20px;
         }
 
         .glass-card {
-            background: rgba(20, 20, 40, 0.75);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 450px;
+            background: rgba(20, 20, 40, 0.75); backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 2.5rem; width: 100%; max-width: 450px;
             box-shadow: 0 0 40px rgba(0, 210, 255, 0.15);
-            position: relative;
-            overflow: hidden;
-            animation: fadeIn 1s ease;
+            position: relative; overflow: hidden; animation: fadeIn 1s ease;
         }
 
         /* Tabs */
-        .tabs {
-            display: flex;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50px;
-            margin-bottom: 2rem;
-            padding: 5px;
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: 0.3s;
-            color: #aaa;
-        }
-
-        .tab.active {
-            background: var(--primary-color);
-            color: #000;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.5);
-        }
+        .tabs { display: flex; background: rgba(255, 255, 255, 0.1); border-radius: 50px; margin-bottom: 2rem; padding: 5px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 50px; font-size: 0.85rem; font-weight: 600; transition: 0.3s; color: #aaa; }
+        .tab.active { background: var(--primary-color); color: #000; box-shadow: 0 0 15px rgba(0, 210, 255, 0.5); }
 
         /* Form */
         .form-header { text-align: center; margin-bottom: 2rem; }
         .form-header h2 { font-family: 'Montserrat', sans-serif; color: white; }
-
         .input-group { margin-bottom: 1.5rem; }
         .input-group label { display: block; font-size: 0.9rem; margin-bottom: 8px; color: #ddd; }
         
         input {
-            width: 100%; padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
-            border-radius: 8px; color: white; font-size: 1rem; outline: none; transition: 0.3s;
+            width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border); border-radius: 8px; color: white;
+            font-size: 1rem; outline: none; transition: 0.3s;
         }
         input:focus { border-color: var(--primary-color); }
 
         .btn-submit {
-            width: 100%; padding: 12px;
-            background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+            width: 100%; padding: 12px; background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
             border: none; border-radius: 50px; color: white; font-weight: 700;
             cursor: pointer; transition: 0.3s; font-size: 1rem; text-transform: uppercase;
         }
         .btn-submit:hover { box-shadow: 0 0 20px rgba(0, 210, 255, 0.6); transform: scale(1.02); }
 
-        .forgot-pass {
-            text-align: right; margin-bottom: 1.5rem; font-size: 0.85rem;
-        }
+        .forgot-pass { text-align: right; margin-bottom: 1.5rem; font-size: 0.85rem; }
         .forgot-pass a { color: var(--primary-color); text-decoration: none; cursor: pointer; }
 
         .register-link { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; }
         .register-link a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
 
-        /* Modal (Generic) */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); z-index: 2000; justify-content: center; align-items: center;
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: #1a1a2e; padding: 2rem; border-radius: 15px; border: 1px solid var(--glass-border);
-            box-shadow: 0 0 25px rgba(0, 210, 255, 0.2);
-            width: 90%; max-width: 400px; text-align: center;
-            position: relative; animation: slideUp 0.3s ease-out;
-        }
-        .close-modal { 
-            position: absolute; top: 10px; right: 15px;
-            font-size: 1.5rem; cursor: pointer; color: #aaa; transition: 0.3s;
-        }
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #1a1a2e; padding: 2rem; border-radius: 15px; border: 1px solid var(--glass-border); box-shadow: 0 0 25px rgba(0, 210, 255, 0.2); width: 90%; max-width: 400px; text-align: center; position: relative; animation: slideUp 0.3s ease-out; }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #aaa; transition: 0.3s; }
         .close-modal:hover { color: var(--primary-color); }
-
         .reset-step { display: block; }
         .hidden { display: none; }
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- RESPONSIVE --- */
-        @media (max-width: 1024px) {
-            nav { padding: 1.2rem 2rem; }
+        /* --- RESPONSIVE BREAKPOINTS --- */
+        @media (max-width: 1100px) {
+            nav { padding: 0 2rem; }
+            .menu-toggle { display: flex; }
+            
+            .nav-links {
+                position: fixed; top: 0; right: -100%;
+                height: 100vh; width: 75%; max-width: 350px;
+                background: var(--mobile-glass); backdrop-filter: blur(20px);
+                flex-direction: column; justify-content: flex-start;
+                align-items: center; gap: 2rem;
+                padding-top: 100px; padding-bottom: 50px;
+                border-left: 1px solid var(--glass-border);
+                transition: right 0.4s ease-in-out;
+                z-index: 1001; overflow-y: auto;
+            }
+            .nav-links.active { right: 0; }
         }
 
         @media (max-width: 768px) {
-            nav { padding: 1rem 1.5rem; }
-            .menu-toggle { display: flex; } 
-            
-            .nav-links {
-                position: fixed; top: 0; right: -100%; height: 100vh; width: 75%;
-                background: var(--mobile-glass); backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                flex-direction: column; justify-content: center; align-items: center;
-                gap: 2rem; border-left: 1px solid var(--glass-border);
-                box-shadow: -10px 0 30px rgba(0,0,0,0.5); z-index: 1001;
-            }
-            .nav-links.active { right: 0; }
-            
             .glass-card { padding: 1.5rem; }
         }
     </style>
@@ -252,13 +161,12 @@
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
 
-    <!-- NAVIGATION -->
     <nav>
         <div class="logo" onclick="window.location.href='home'">LAKSHYA 2K26</div>
         
         <ul class="nav-links" id="navLinks">
             <li><a href="home" onclick="closeMenu()">Home</a></li>
-            <li><a href="about">About Us</a></li>
+            <li><a href="about" onclick="closeMenu()">About Us</a></li>
             <li><a href="brochure" onclick="closeMenu()">Brochure</a></li>
             <li><a href="events" onclick="closeMenu()">Events</a></li>
             <li><a href="culturals" onclick="closeMenu()">Culturals</a></li>
@@ -277,7 +185,6 @@
 
     <div class="container">
         <div class="glass-card">
-            <!-- TABS -->
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('participant')">Participant</div>
                 <div class="tab" onclick="switchTab('coordinator')">Coordinator</div>
@@ -311,7 +218,7 @@
         </div>
     </div>
 
-    <!-- 1. ALERT POPUP MODAL (Replaces default alert) -->
+    <!-- ALERT MODAL -->
     <div class="modal" id="alertModal" style="z-index: 3000;">
         <div class="modal-content" style="max-width: 350px;">
             <span class="close-modal" onclick="closePopup()">&times;</span>
@@ -324,20 +231,16 @@
         </div>
     </div>
 
-    <!-- 2. FORGOT PASSWORD MODAL (Multi-step) -->
+    <!-- FORGOT PASSWORD MODAL -->
     <div class="modal" id="forgotModal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeForgotPasswordModal()">&times;</span>
-            
-            <!-- Step 1: Request OTP -->
             <div id="step1" class="reset-step">
                 <h3 style="color:white; margin-bottom:1rem;">Reset Password</h3>
                 <p style="color:#ccc; font-size:0.9rem; margin-bottom:1rem;">Enter your registered email to receive an OTP.</p>
                 <input type="email" id="resetEmail" placeholder="Enter your email" style="margin-bottom:1rem;" required>
                 <button class="btn-submit" id="sendOtpBtn" onclick="sendResetOtp()">Send OTP</button>
             </div>
-
-            <!-- Step 2: Verify & Reset -->
             <div id="step2" class="reset-step hidden">
                 <h3 style="color:white; margin-bottom:1rem;">Set New Password</h3>
                 <p style="color:#ccc; font-size:0.9rem; margin-bottom:1rem;">Check your email for the OTP.</p>
@@ -349,7 +252,7 @@
     </div>
 <script src="/js/chatbot.js"></script>
     <script>
-        // Navbar Logic
+        // --- MOBILE MENU LOGIC ---
         const nav = document.getElementById('navLinks');
         const menuToggle = document.getElementById('mobile-menu');
 
@@ -375,10 +278,7 @@
             document.getElementById('popupMessage').innerText = message;
             document.getElementById('alertModal').style.display = 'flex';
         }
-
-        function closePopup() {
-            document.getElementById('alertModal').style.display = 'none';
-        }
+        function closePopup() { document.getElementById('alertModal').style.display = 'none'; }
 
         // --- LOGIN LOGIC ---
         let currentRole = 'participant';
@@ -413,7 +313,6 @@
 
         function openForgotPasswordModal() { 
             document.getElementById('forgotModal').style.display = 'flex'; 
-            // Reset modal state
             document.getElementById('step1').classList.remove('hidden');
             document.getElementById('step2').classList.add('hidden');
             document.getElementById('resetEmail').value = '';
@@ -426,7 +325,6 @@
             const email = document.getElementById('emailInput').value;
             const password = document.getElementById('passwordInput').value;
             const btn = document.getElementById('loginBtn');
-
             btn.innerText = "Logging in...";
             btn.disabled = true;
 
@@ -436,95 +334,61 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password, role: currentRole })
                 });
-
                 const result = await response.json();
-
                 if (response.ok) {
                     if (currentRole === 'participant') window.location.href = '../participant/dashboard';
                     else if (currentRole === 'coordinator') window.location.href = '../coordinator/dashboard';
                     else window.location.href = '../admin/dashboard';
                 } else {
                     showPopup("Login Failed", result.error);
-                    btn.innerText = "Login";
-                    btn.disabled = false;
+                    btn.innerText = "Login"; btn.disabled = false;
                 }
             } catch (error) {
                 console.error("Error:", error);
                 showPopup("Connection Error", "Server error. Please check your connection.");
-                btn.innerText = "Login";
-                btn.disabled = false;
+                btn.innerText = "Login"; btn.disabled = false;
             }
         }
 
-        // --- FORGOT PASSWORD LOGIC ---
-
-        // Step 1: Send OTP
         async function sendResetOtp() {
             const email = document.getElementById('resetEmail').value;
             const btn = document.getElementById('sendOtpBtn');
-
             if(!email) { showPopup("Input Required", "Please enter your email"); return; }
-
-            btn.innerText = "Sending...";
-            btn.disabled = true;
+            btn.innerText = "Sending..."; btn.disabled = true;
 
             try {
                 const res = await fetch('/api/auth/forgot-password-request', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
-
                 const data = await res.json();
                 if(res.ok) {
                     showPopup("OTP Sent", data.message);
                     document.getElementById('step1').classList.add('hidden');
                     document.getElementById('step2').classList.remove('hidden');
-                } else {
-                    showPopup("Error", data.error);
-                }
-            } catch(e) {
-                console.error(e);
-                showPopup("Error", "Failed to send OTP. Try again.");
-            } finally {
-                btn.innerText = "Send OTP";
-                btn.disabled = false;
-            }
+                } else { showPopup("Error", data.error); }
+            } catch(e) { console.error(e); showPopup("Error", "Failed to send OTP."); } 
+            finally { btn.innerText = "Send OTP"; btn.disabled = false; }
         }
 
-        // Step 2: Reset Password
         async function submitResetPassword() {
             const email = document.getElementById('resetEmail').value;
             const otp = document.getElementById('resetOtp').value;
             const newPassword = document.getElementById('newPassword').value;
             const btn = document.getElementById('resetPassBtn');
-
             if(!otp || !newPassword) { showPopup("Input Required", "Please fill all fields"); return; }
-
-            btn.innerText = "Processing...";
-            btn.disabled = true;
+            btn.innerText = "Processing..."; btn.disabled = true;
 
             try {
                 const res = await fetch('/api/auth/reset-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, otp, newPassword })
                 });
-
                 const data = await res.json();
-                if(res.ok) {
-                    showPopup("Success", data.message);
-                    closeForgotPasswordModal();
-                } else {
-                    showPopup("Reset Failed", data.error);
-                }
-            } catch(e) {
-                console.error(e);
-                showPopup("Error", "Failed to reset password.");
-            } finally {
-                btn.innerText = "Reset Password";
-                btn.disabled = false;
-            }
+                if(res.ok) { showPopup("Success", data.message); closeForgotPasswordModal(); }
+                else { showPopup("Reset Failed", data.error); }
+            } catch(e) { console.error(e); showPopup("Error", "Failed to reset password."); }
+            finally { btn.innerText = "Reset Password"; btn.disabled = false; }
         }
     </script>
 </body>
